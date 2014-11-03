@@ -7,6 +7,12 @@
 #define ETA   1.0f
 #define XI    0.001f
 
+enum{
+	SIGMOID = 0, 
+	INVTIME,
+	EXP
+};
+
 /* simulation parameters */
 typedef struct{
 	int max_epochs; 	/* number of epochs to run the network */
@@ -27,4 +33,6 @@ simulation* init_simulation(int nepochs, network*net);
 /* destroy the simulation */
 void deinit_simulation(simulation* s);
 
+/* parametrize adaptive parameters */
+double* parametrize_process(double v0, double vf, int t0, int tf, short type);
 

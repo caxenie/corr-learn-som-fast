@@ -45,3 +45,32 @@ void deinit_simulation(simulation* s)
 	deinit_network(s->n);
 }
 
+/* parametrize adaptive parameters */
+double* parametrize_process(double v0, double vf, int t0, int tf, short type)
+{
+	int len = tf-t0;
+	double* out = (double*)calloc(len, sizeof(double));
+	double s = 0.0f, p = 0.0f, A = 0.0f, B = 0.0f;
+		
+	switch(type){
+		case SIGMOID:
+			s = -floor(log10(tf))*pow(10, (-(floor(log10(tf)))));		
+			p = abs(s*pow(10, (floor(log10(tf))+ floor(log10(tf)/2))));
+			for(int i = 0;i<len;i++)
+				out[i] = v0 - v0/(1+exp(s*(i-(tf/p)))) + vf;				
+		break;
+		case INVTIME:
+			B = (vf*tf - v0*t0)/(v0-vf);
+			A = v0*t0 + B*v0;
+			for (int i=0;i<len;i++)
+				out[i] = A/(i+B);
+		break;
+		case EXP:
+			if(v0<1) p = -log(v0);
+			else p = log(v0);
+			for(int i=0;i<len;i++)
+				out[i] = v0*exp(-i/(tf/p));
+		break;
+	}
+	return out;
+}
