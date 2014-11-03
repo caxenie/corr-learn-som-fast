@@ -1,5 +1,4 @@
-#include <simulation.h>
-
+#include "simulation.h"
 
 /* initialize simulation */
 simulation* init_simulation(int nepochs, network*net)
@@ -32,6 +31,8 @@ simulation* init_simulation(int nepochs, network*net)
 	for (int i = 0;i<s->tf_lrn_cross;i++){
 		s->xi[i] = XI;
 	}
+	s->n = net;
+	return s;
 }
 
 /* destroy the simulation */
