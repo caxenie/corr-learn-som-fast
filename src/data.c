@@ -34,6 +34,3 @@ indata* generate_input_data(int np, int psz, int l)
 	return id;
 }	
 
-/* dump runtime data to file */
-int write_output_data(outdata *odata);
-

@@ -1,4 +1,4 @@
-#include "network.h"
+#include "simulation.h"
 
 /* initialize a neural population */
 population* init_population(short idx, int psize)
@@ -10,9 +10,7 @@ population* init_population(short idx, int psize)
 	p->id = idx;
 	p->size = psize;	
 
-	p->Winput = (double**)malloc(p->size*sizeof(population*));
-	for(int i = 0; i<p->size; i++)
-		p->Winput[i] = (double*)malloc(p->size*sizeof(population));
+	p->Winput = (double*)malloc(p->size*sizeof(population));
 	p->Wcross = (double**)calloc(p->size, sizeof(population*));
 	for(int i = 0; i<p->size; i++)
 		p->Wcross[i] = (double*)calloc(p->size, sizeof(population));
@@ -39,13 +37,13 @@ population* init_population(short idx, int psize)
 
 
 /* initialize the network */
-network* init_network(int npop, int psize)
+network* init_network(int npop, int psz)
 {
 	network* n = (network*)calloc(1, sizeof(network));
 	n->nsize = npop;
-	n->pops = (population**)calloc(n->nsize, sizeof(population*));
+	n->pops = (population*)calloc(n->nsize, sizeof(population));
 	for (int i = 0; i<n->nsize; i++){
-		n->pops[i] = init_population((short)i, psize);
+		n->pops = init_population((short)i, psz);
 	}
 	return n;
 }
@@ -54,7 +52,6 @@ network* init_network(int npop, int psize)
 void deinit_population(population *p)
 {
 	for(int i=0; i<p->size;i++){
-		free(p->Winput[i]);
 		free(p->Wcross[i]);	
 	}
 	free(p->Winput);
@@ -68,9 +65,6 @@ void deinit_population(population *p)
 /* deallocate a network */
 void deinit_network(network *net)
 {
-	for(int i = 0; i<net->nsize; i++){
-		deinit_population(net->pops[i]);
-	}
 	free(net->pops);
 	free(net);
 }

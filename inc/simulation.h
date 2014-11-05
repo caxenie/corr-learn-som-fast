@@ -1,6 +1,11 @@
 #include "network.h"
+#include "data.h"
 
 /* simulation constant parameters */
+#define MAX_EPOCHS      1000
+#define N_POP           2
+#define POP_SIZE        100
+#define DATASET_LEN     1500
 #define ALPHAI 0.1f
 #define ALPHAF 0.001f
 #define SIGMAF 1.0f
@@ -26,12 +31,20 @@ typedef struct{
 	network *n;		/* network to simulate */
 }simulation;
 
+/* output data struct */
+typedef struct{
+        simulation *sim;        /* simulation params */
+        indata *in;             /* input data */
+        network *n;             /* network */
+}outdata;
+
 
 /* initialize simulation */
 simulation* init_simulation(int nepochs, network*net);
-
 /* destroy the simulation */
 void deinit_simulation(simulation* s);
+/* run simulation and save runtime data struct */
+outdata* run_simulation(indata *in, simulation *s);
 
 /* parametrize adaptive parameters */
 double* parametrize_process(double v0, double vf, int t0, int tf, short type);

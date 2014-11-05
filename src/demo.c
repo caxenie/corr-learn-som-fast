@@ -1,4 +1,4 @@
-#include "demo.h"
+#include "simulation.h"
 
 #define MAX_EPOCHS	1000
 #define N_POP		2

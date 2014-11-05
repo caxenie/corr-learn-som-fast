@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <math.h>
+
 enum{
         UNIFORM = 0,
         NONUNIFORM
