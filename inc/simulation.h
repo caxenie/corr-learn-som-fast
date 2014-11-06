@@ -12,11 +12,21 @@
 #define ETA   1.0f
 #define XI    0.001f
 
+/* adaptive processes parametruization types */
 enum{
 	SIGMOID = 0, 
 	INVTIME,
 	EXP
 };
+
+/* cross-modal learning rules */
+enum{
+	HEBB = 0, 
+	COVARIANCE,
+	OJA
+};
+
+#define LEARNING_RULE COVARIANCE
 
 /* simulation parameters */
 typedef struct{

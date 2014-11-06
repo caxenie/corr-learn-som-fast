@@ -32,11 +32,18 @@ outdata* run_simulation(indata *in, simulation *s)
 {
 	double insample = 0.0f;
 	double tot_act = 0.0f;
-	double cur_act = 0.0f;
+	double *cur_act = (double*)calloc(s->n->pops[0].size, sizeof(double));
+	double **avg_act = (double**)calloc(s->n->nsize, sizeof(double*));
+	for(int i=0; i<s->n->nsize; i++)
+		avg_act[i] = (double*)calloc(s->n->pops[0].size, sizeof(double));
+	double *sum_wcross = (double*)calloc(s->n->nsize, sizeof(double));
+	double *max_wcross = (double*)calloc(s->n->nsize, sizeof(double));
 	double win_act = 0.0f;
 	int win_idx = 0;
+	double omega = 0.0f;
 	double *hwi = (double*)calloc(s->n->pops[0].size, sizeof(double));
 	simulation* runtime = (simulation*)calloc(1, sizeof(simulation));
+
 	/* correlation learning loop */
         for(int tidx = s->t0; tidx<s->tf_lrn_cross; tidx++){	
 		if(tidx<s->tf_lrn_in){
@@ -45,7 +52,6 @@ outdata* run_simulation(indata *in, simulation *s)
 				/* loop through populations */
 				for(int pidx = 0; pidx < s->n->nsize; pidx++){
 					tot_act = 0.0f;
-					cur_act = 0.0f;
 					win_act = 0.0f;
 					win_idx = 0.0f;
 					hwi = (double*)calloc(s->n->pops[0].size, sizeof(double));
@@ -53,18 +59,27 @@ outdata* run_simulation(indata *in, simulation *s)
 					/* loop through neurons in current population */
 					for(int nidx = 0; nidx<s->n->pops[pidx].size;nidx++){
 						/* compute sensory elicited activation */
-						cur_act = (1/(sqrt(2*M_PI)*s->n->pops[pidx].s[nidx]))*
+						cur_act[nidx] = (1/(sqrt(2*M_PI)*s->n->pops[pidx].s[nidx]))*
 							   exp(-pow((insample - s->n->pops[pidx].Winput[nidx]),2)/2*pow(s->n->pops[pidx].s[nidx], 2));
-					}		
+					}	
+		                        printf("BP1 cur_act:%lf\n", cur_act[34]);
+		                        printf("BP1 avg_act:%lf\n", avg_act[0][34]);
+	
 					/* normalize the activity vector of the population */
 					for(int snid = 0; snid<s->n->pops[pidx].size; snid++){
 						tot_act	+= s->n->pops[pidx].a[snid];
 					}	
-					cur_act /= tot_act;
+					for(int snid = 0; snid<s->n->pops[pidx].size; snid++){	
+						cur_act[snid] /= tot_act;
+					}
+					printf("BP2 cur_act:%lf\n", cur_act[34]);
+                                        printf("BP2 avg_act:%lf\n", avg_act[0][34]);
 					/* update the activity for next iteration */
 					for(int nidx = 0; nidx<s->n->pops[pidx].size;nidx++){
-						s->n->pops[pidx].a[nidx] = (1-s->eta[tidx])*s->n->pops[pidx].a[nidx] + s->eta[tidx]*cur_act;
+						s->n->pops[pidx].a[nidx] = (1-s->eta[tidx])*s->n->pops[pidx].a[nidx] + s->eta[tidx]*cur_act[nidx];
 					}
+					printf("BP1 cur_act:%lf\n", s->n->pops[0].a[34]);
+                                        printf("BP1 avg_act:%lf\n", avg_act[0][34]);
 					/* competition step - find the neuron with maximum activity */
 					/* find the neuron with maximum activity and it's index in the population */
 					for(int snid = 0; snid<s->n->pops[pidx].size; snid++){ 
@@ -78,13 +93,142 @@ outdata* run_simulation(indata *in, simulation *s)
 						hwi[nidx] = exp(-pow(fabs(nidx -  win_idx), 2)/(2*pow(s->sigma[tidx], 2)));
 						/* compute the sensory input synaptic weight */
 						s->n->pops[pidx].Winput[nidx] += s->alpha[tidx]*hwi[nidx]*(insample - s->n->pops[pidx].Winput[nidx]); 
+						/* update the shape of the tuning curve for the current neuron */
+						s->n->pops[pidx].s[nidx] += s->alpha[tidx]*(1/(sqrt(2*M_PI)*s->sigma[tidx]))*
+									    exp(-pow(fabs(nidx -  win_idx), 2)/(2*pow(s->sigma[tidx], 2)))*
+									    (pow((insample - s->n->pops[pidx].Winput[nidx]) , 2) - pow(s->n->pops[pidx].s[nidx], 2));
+						
+					}/* end for each neuron in the population */
+				    }/* end loop through populations */	
+				}/* end loop of sensory data presentation */
+			}/* end loop for training input data distribution */
+	
+		        printf("BP2 cur_act:%lf\n", s->n->pops[0].a[34]);
+		        printf("BP2 avg_act:%lf\n", avg_act[0][34]);
 
+			/* cross-modal learning loop */
+                        for(int didx = 0; didx < in->len; didx++){
+				/* use the learned sensory elicited synaptic weights and compute activation for each population */
+				/* loop through populations */
+                                for(int pidx = 0; pidx < s->n->nsize; pidx++){
+                                        tot_act = 0.0f;
+                                        insample = in->data[didx][pidx];
+                                        /* loop through neurons in current population */
+                                        for(int nidx = 0; nidx<s->n->pops[pidx].size;nidx++){
+                                                /* compute sensory elicited activation */
+                                                cur_act[nidx] = (1/(sqrt(2*M_PI)*s->n->pops[pidx].s[nidx]))*
+                                                           exp(-pow((insample - s->n->pops[pidx].Winput[nidx]),2)/2*pow(s->n->pops[pidx].s[nidx], 2));
+                                        }
+                                        /* normalize the activity vector of the population */
+                                        for(int snid = 0; snid<s->n->pops[pidx].size; snid++){
+                                                tot_act += s->n->pops[pidx].a[snid];
+                                        }
+					for(int snid = 0; snid<s->n->pops[pidx].size; snid++){
+	                                        cur_act[snid] /= tot_act;
 					}
-
-				    }	
-				}
+					/* update the activity for next iteration */
+                                        for(int nidx = 0; nidx<s->n->pops[pidx].size;nidx++){
+                                                s->n->pops[pidx].a[nidx] = (1-s->eta[tidx])*s->n->pops[pidx].a[nidx] + s->eta[tidx]*cur_act[nidx];
+                                        }
+				 }/* end loop for each population */
+					/* apply the learning rule */
+					int pidx = 0;
+					switch(LEARNING_RULE){	
+						case HEBB:
+							/* cross-modal hebbian learning */
+							for(int i=0;i<s->n->pops[pidx].size;i++){
+								for(int j=0; j<s->n->pops[pidx].size; j++){
+									s->n->pops[0].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[0].Wcross[i][j]+
+													s->xi[tidx]*s->n->pops[0].a[i]*s->n->pops[1].a[j];
+								}
+							}
+							for(int i=0;i<s->n->pops[pidx].size;i++){
+                                                                for(int j=0; j<s->n->pops[pidx].size; j++){
+                                                                        s->n->pops[1].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[1].Wcross[i][j]+     
+                                                                                                        s->xi[tidx]*s->n->pops[1].a[i]*s->n->pops[0].a[j];
+                                                                }
+                                                        }
+						break;
+						case COVARIANCE:
+							/* compute the mean value decay */
+							omega = 0.002f + 0.998f/(tidx+2);
+							/* compute the average activity */
+							for(int pidx = 0; pidx < s->n->nsize; pidx++){
+								for(int snid = 0; snid<s->n->pops[pidx].size; snid++){
+                                                                        avg_act[pidx][snid] = (1-omega)*avg_act[pidx][snid] + omega*s->n->pops[pidx].a[snid];
+                                                                }
+							}
+							/* cross-modal covariance learning rule */
+							for(int i=0;i<s->n->pops[pidx].size;i++){
+                                	                        for(int j=0; j<s->n->pops[pidx].size; j++){
+                                                           	      printf("cur_act:%lf\n", s->n->pops[0].a[j]);
+				                               	      printf("avg_act:%lf\n", avg_act[0][j]);
+							              s->n->pops[0].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[0].Wcross[i][j]+
+                                                                                                    s->xi[tidx]*
+												    (s->n->pops[0].a[i] - avg_act[0][i])*
+												    (s->n->pops[1].a[j] - avg_act[1][j]);
+                        	                                }
+                	                                }
+        	                                        for(int i=0;i<s->n->pops[pidx].size;i++){
+                                        	                for(int j=0; j<s->n->pops[pidx].size; j++){
+                                                                      s->n->pops[1].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[1].Wcross[i][j]+
+                                                                                                   s->xi[tidx]*
+												   (s->n->pops[1].a[i] - avg_act[1][i])*
+												   (s->n->pops[0].a[j] - avg_act[0][j]);
+                                                       	        }
+							}
+						break;
+						case OJA:
+							/* compute the global synaptic strength in the likage */
+							for(int i=0;i<s->n->pops[pidx].size;i++){
+                                                                for(int j=0; j<s->n->pops[pidx].size; j++){
+                                                                        s->n->pops[0].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[0].Wcross[i][j]+
+                                                                                                        s->xi[tidx]*s->n->pops[0].a[i]*s->n->pops[1].a[j];
+									sum_wcross[0] += s->n->pops[0].Wcross[i][j];
+                                                                }
+                                                        }
+                                                        for(int i=0;i<s->n->pops[pidx].size;i++){
+                                                                for(int j=0; j<s->n->pops[pidx].size; j++){
+                                                                        s->n->pops[1].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[1].Wcross[i][j]+
+                                                                                                        s->xi[tidx]*s->n->pops[1].a[i]*s->n->pops[0].a[j];
+									sum_wcross[1] += s->n->pops[1].Wcross[i][j];
+                                                                }
+                                                        }
+							/* compute the synaptic weights using Oja's local normalizing PCA rule */
+							for(int i=0;i<s->n->pops[pidx].size;i++){
+                                                                for(int j=0; j<s->n->pops[pidx].size; j++){
+                                                                        s->n->pops[0].Wcross[i][j] = ((1-s->xi[tidx])*s->n->pops[0].Wcross[i][j]+
+                                                                                                        s->xi[tidx]*s->n->pops[0].a[i]*s->n->pops[1].a[j])/
+			                                                                        	sqrt(sum_wcross[0]);
+                                                                }
+                                                        }
+                                                        for(int i=0;i<s->n->pops[pidx].size;i++){
+                                                                for(int j=0; j<s->n->pops[pidx].size; j++){
+                                                                        s->n->pops[1].Wcross[i][j] = ((1-s->xi[tidx])*s->n->pops[1].Wcross[i][j]+
+                                                                                                        s->xi[tidx]*s->n->pops[1].a[i]*s->n->pops[0].a[j])/
+                                                                        				sqrt(sum_wcross[1]);
+                                                                }
+                                                        }
+						break;
+					}/* and learning rule selector */
+			}/* end dataset loop for cross-modal learning */
+	}/* end cross-modal learning process */
+	/* normalize cross-modal synaptic weights for visualization */
+	for(int pidx = 0; pidx < s->n->nsize; pidx++){
+		for(int i=0;i<s->n->pops[pidx].size;i++){
+        	        for(int j=0; j<s->n->pops[pidx].size; j++){
+				if(s->n->pops[pidx].Wcross[i][j]>max_wcross[pidx])
+					max_wcross[pidx] = s->n->pops[pidx].Wcross[i][j];	
 			}
 		}
+	}
+	for(int pidx = 0; pidx < s->n->nsize; pidx++){
+                for(int i=0;i<s->n->pops[pidx].size;i++){
+                        for(int j=0; j<s->n->pops[pidx].size; j++){
+				s->n->pops[pidx].Wcross[i][j] /= max_wcross[pidx];
+			}
+		}
+	}
 }
 
 /* destroy the simulation */

@@ -8,10 +8,9 @@
 int main(int argc, char* argv[])
 {
 	indata *indata = generate_input_data(N_POP, POP_SIZE, DATASET_LEN);
-	network *n = init_network(indata->npop, indata->popsize); 
-	simulation *s = init_simulation(MAX_EPOCHS, n);
-
-	
-	deinit_simulation(s);
+	network *net = init_network(indata->npop, indata->popsize); 
+	simulation *sim = init_simulation(MAX_EPOCHS, net);
+	outdata *rutime = run_simulation(indata, sim);
+	deinit_simulation(sim);
 	return EXIT_SUCCESS;
 }
