@@ -45,7 +45,6 @@ typedef struct{
 typedef struct{
         simulation *sim;        /* simulation params */
         indata *in;             /* input data */
-        network *n;             /* network */
 }outdata;
 
 
@@ -55,6 +54,8 @@ simulation* init_simulation(int nepochs, network*net);
 void deinit_simulation(simulation* s);
 /* run simulation and save runtime data struct */
 outdata* run_simulation(indata *in, simulation *s);
+/* dump the runtime data to file on disk */
+char* dump_runtime_data(outdata *od);
 
 /* parametrize adaptive parameters */
 double* parametrize_process(double v0, double vf, int t0, int tf, short type);

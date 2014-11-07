@@ -42,7 +42,7 @@ outdata* run_simulation(indata *in, simulation *s)
 	int win_idx = 0;
 	double omega = 0.0f;
 	double *hwi = (double*)calloc(s->n->pops[0].size, sizeof(double));
-	simulation* runtime = (simulation*)calloc(1, sizeof(simulation));
+	outdata *runtime = (outdata*)calloc(1, sizeof(outdata));
 
 	/* correlation learning loop */
         for(int tidx = s->t0; tidx<s->tf_lrn_cross; tidx++){	
@@ -56,30 +56,25 @@ outdata* run_simulation(indata *in, simulation *s)
 					win_idx = 0.0f;
 					hwi = (double*)calloc(s->n->pops[0].size, sizeof(double));
 					insample = in->data[didx][pidx];
+					cur_act = (double*)calloc(s->n->pops[0].size, sizeof(double));
 					/* loop through neurons in current population */
 					for(int nidx = 0; nidx<s->n->pops[pidx].size;nidx++){
 						/* compute sensory elicited activation */
 						cur_act[nidx] = (1/(sqrt(2*M_PI)*s->n->pops[pidx].s[nidx]))*
 							   exp(-pow((insample - s->n->pops[pidx].Winput[nidx]),2)/2*pow(s->n->pops[pidx].s[nidx], 2));
 					}	
-		                        printf("BP1 cur_act:%lf\n", cur_act[34]);
-		                        printf("BP1 avg_act:%lf\n", avg_act[0][34]);
 	
 					/* normalize the activity vector of the population */
 					for(int snid = 0; snid<s->n->pops[pidx].size; snid++){
-						tot_act	+= s->n->pops[pidx].a[snid];
-					}	
+						tot_act	+= cur_act[snid];
+					}
 					for(int snid = 0; snid<s->n->pops[pidx].size; snid++){	
 						cur_act[snid] /= tot_act;
 					}
-					printf("BP2 cur_act:%lf\n", cur_act[34]);
-                                        printf("BP2 avg_act:%lf\n", avg_act[0][34]);
 					/* update the activity for next iteration */
 					for(int nidx = 0; nidx<s->n->pops[pidx].size;nidx++){
 						s->n->pops[pidx].a[nidx] = (1-s->eta[tidx])*s->n->pops[pidx].a[nidx] + s->eta[tidx]*cur_act[nidx];
 					}
-					printf("BP1 cur_act:%lf\n", s->n->pops[0].a[34]);
-                                        printf("BP1 avg_act:%lf\n", avg_act[0][34]);
 					/* competition step - find the neuron with maximum activity */
 					/* find the neuron with maximum activity and it's index in the population */
 					for(int snid = 0; snid<s->n->pops[pidx].size; snid++){ 
@@ -100,11 +95,9 @@ outdata* run_simulation(indata *in, simulation *s)
 						
 					}/* end for each neuron in the population */
 				    }/* end loop through populations */	
+
 				}/* end loop of sensory data presentation */
 			}/* end loop for training input data distribution */
-	
-		        printf("BP2 cur_act:%lf\n", s->n->pops[0].a[34]);
-		        printf("BP2 avg_act:%lf\n", avg_act[0][34]);
 
 			/* cross-modal learning loop */
                         for(int didx = 0; didx < in->len; didx++){
@@ -112,6 +105,7 @@ outdata* run_simulation(indata *in, simulation *s)
 				/* loop through populations */
                                 for(int pidx = 0; pidx < s->n->nsize; pidx++){
                                         tot_act = 0.0f;
+					cur_act = (double*)calloc(s->n->pops[0].size, sizeof(double));
                                         insample = in->data[didx][pidx];
                                         /* loop through neurons in current population */
                                         for(int nidx = 0; nidx<s->n->pops[pidx].size;nidx++){
@@ -121,7 +115,7 @@ outdata* run_simulation(indata *in, simulation *s)
                                         }
                                         /* normalize the activity vector of the population */
                                         for(int snid = 0; snid<s->n->pops[pidx].size; snid++){
-                                                tot_act += s->n->pops[pidx].a[snid];
+                                                tot_act += cur_act[snid];
                                         }
 					for(int snid = 0; snid<s->n->pops[pidx].size; snid++){
 	                                        cur_act[snid] /= tot_act;
@@ -161,8 +155,6 @@ outdata* run_simulation(indata *in, simulation *s)
 							/* cross-modal covariance learning rule */
 							for(int i=0;i<s->n->pops[pidx].size;i++){
                                 	                        for(int j=0; j<s->n->pops[pidx].size; j++){
-                                                           	      printf("cur_act:%lf\n", s->n->pops[0].a[j]);
-				                               	      printf("avg_act:%lf\n", avg_act[0][j]);
 							              s->n->pops[0].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[0].Wcross[i][j]+
                                                                                                     s->xi[tidx]*
 												    (s->n->pops[0].a[i] - avg_act[0][i])*
@@ -229,6 +221,11 @@ outdata* run_simulation(indata *in, simulation *s)
 			}
 		}
 	}
+	/* fill in the return struct */
+	runtime->in = in;
+	runtime->sim = s;
+	
+	return runtime;
 }
 
 /* destroy the simulation */
@@ -240,6 +237,33 @@ void deinit_simulation(simulation* s)
 	free(s->xi);
 	deinit_network(s->n);
 }
+
+/* dump the runtime data to file on disk */
+char* dump_runtime_data(outdata *od)
+{
+	time_t rawt; time(&rawt);
+        struct tm* tinfo = localtime(&rawt);
+        FILE* fout;
+        char* nfout = (char*)calloc(400, sizeof(char));
+        char simparams[200];
+
+        strftime(nfout, 150, "%Y-%m-%d__%H:%M:%S", tinfo);
+        strcat(nfout, "_cln_runtime_data_");
+        sprintf(simparams, "%d_epochs_%d_populations_%d_neurons",
+                           od->sim->max_epochs,
+                           od->sim->n->nsize,
+                           od->sim->n->pops[od->sim->n->nsize-1].size);
+        strcat(nfout, simparams);
+
+        if((fout = fopen(nfout, "wb"))==NULL){
+                printf("dump_runtime_data: Cannot create output file.\n");
+                return NULL;
+        }
+        fwrite(od, sizeof(outdata), 1, fout);
+        fclose(fout);
+        return nfout;
+}
+
 
 /* parametrize adaptive parameters */
 double* parametrize_process(double v0, double vf, int t0, int tf, short type)

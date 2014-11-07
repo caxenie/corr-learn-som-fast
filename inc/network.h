@@ -35,7 +35,7 @@ typedef struct{
 }network;
 
 /* initialize a neural population */
-population* init_population(short idx, int psize);
+population init_population(short idx, int psize);
 /* initialize the network */
 network* init_network(int npop, int psize);
 /* deallocate a neural population */
