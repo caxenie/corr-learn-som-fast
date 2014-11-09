@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
 	network *net = init_network(indata->npop, indata->popsize); 
 	simulation *sim = init_simulation(MAX_EPOCHS, net);
 	outdata *runtime = run_simulation(indata, sim);
-	char* dump_file = dump_runtime_data(runtime);
+	char* dump_file = dump_runtime_data_extended(runtime);
 	deinit_simulation(sim);
 	return EXIT_SUCCESS;
 }

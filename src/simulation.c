@@ -264,6 +264,70 @@ char* dump_runtime_data(outdata *od)
         return nfout;
 }
 
+/* dump the runtime data to file on disk - explicit sequential write */
+char* dump_runtime_data_extended(outdata *od)
+{
+	time_t rawt; time(&rawt);
+        struct tm* tinfo = localtime(&rawt);
+        FILE* fout;
+        char* nfout = (char*)calloc(400, sizeof(char));
+        char simparams[200];
+
+        strftime(nfout, 150, "%Y-%m-%d__%H:%M:%S", tinfo);
+        strcat(nfout, "_cln_extended_runtime_data_");
+        sprintf(simparams, "%d_epochs_%d_populations_%d_neurons",
+                           od->sim->max_epochs,
+                           od->sim->n->nsize,
+                           od->sim->n->pops[od->sim->n->nsize-1].size);
+        strcat(nfout, simparams);
+
+        if((fout = fopen(nfout, "wb"))==NULL){
+                printf("dump_runtime_data: Cannot create output file.\n");
+                return NULL;
+        }
+	/* in order ot read the data in Matlab write explicitly every field */
+        /* simulation data */
+	fwrite(&(od->sim->max_epochs), sizeof(int), 1, fout);
+	fwrite(&(od->sim->t0), sizeof(int), 1, fout);
+	fwrite(&(od->sim->tf_lrn_in), sizeof(int), 1, fout);
+	fwrite(&(od->sim->tf_lrn_cross), sizeof(int), 1, fout);
+	for(int i = 0; i<od->sim->tf_lrn_in; i++)
+		fwrite(&(od->sim->alpha[i]), sizeof(double), 1, fout);
+	for(int i = 0; i<od->sim->tf_lrn_in; i++)
+		fwrite(&(od->sim->sigma[i]), sizeof(double), 1, fout);
+	for(int i = 0; i<od->sim->tf_lrn_cross; i++)
+		fwrite(&(od->sim->eta[i]), sizeof(double), 1, fout);
+	for(int i = 0; i<od->sim->tf_lrn_cross; i++)
+		fwrite(&(od->sim->xi[i]), sizeof(double), 1, fout);
+	/* network data */
+	fwrite(&(od->sim->n->nsize), sizeof(short), 1, fout);
+	for(int pidx = 0; pidx<od->sim->n->nsize;pidx++){
+		fwrite(&(od->sim->n->pops[pidx].id), sizeof(short), 1, fout);
+		fwrite(&(od->sim->n->pops[pidx].size), sizeof(int), 1, fout);
+		for(int i=0; i<od->sim->n->pops[pidx].size;i++){
+			fwrite(&(od->sim->n->pops[pidx].Winput[i]), sizeof(double), 1, fout);
+			for(int j = 0;j < od->sim->n->pops[pidx].size; j++){
+				fwrite(&(od->sim->n->pops[pidx].Wcross[i][j]), sizeof(double), 1, fout);
+			}
+			fwrite(&(od->sim->n->pops[pidx].s[i]), sizeof(double), 1, fout);
+			fwrite(&(od->sim->n->pops[pidx].a[i]), sizeof(double), 1, fout);
+		}
+	}
+	/* inpute data */
+	fwrite(&(od->in->npop), sizeof(int), 1, fout);
+	fwrite(&(od->in->popsize), sizeof(int), 1, fout);
+	fwrite(&(od->in->len), sizeof(int), 1, fout);
+	printf("inpop %d | posize %d | len %d \n", od->in->npop, od->in->popsize, od->in->len);
+	for(int i=0;od->in->len;i++){
+		for(int j=0;j<od->in->npop;j++){
+			fwrite(&(od->in->data[i][j]), sizeof(double), 1, fout);	
+			printf(" %lf ", od->in->data[i][j]);
+		}
+		printf("\n");
+	}
+        fclose(fout);
+        return nfout;
+}
 
 /* parametrize adaptive parameters */
 double* parametrize_process(double v0, double vf, int t0, int tf, short type)

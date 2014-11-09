@@ -56,6 +56,10 @@ void deinit_simulation(simulation* s);
 outdata* run_simulation(indata *in, simulation *s);
 /* dump the runtime data to file on disk */
 char* dump_runtime_data(outdata *od);
+/* dump the runtime data to file on disk - explicit sequential write */
+char* dump_runtime_data_extended(outdata *od);
+
+
 
 /* parametrize adaptive parameters */
 double* parametrize_process(double v0, double vf, int t0, int tf, short type);
