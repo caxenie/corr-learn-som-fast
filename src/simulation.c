@@ -313,7 +313,7 @@ char* dump_runtime_data_extended(outdata *od)
 			fwrite(&(od->sim->n->pops[pidx].a[i]), sizeof(double), 1, fout);
 		}
 	}
-	/* inpute data */
+	/* input data */
 	fwrite(&(od->in->npop), sizeof(int), 1, fout);
 	fwrite(&(od->in->popsize), sizeof(int), 1, fout);
 	fwrite(&(od->in->len), sizeof(int), 1, fout);
