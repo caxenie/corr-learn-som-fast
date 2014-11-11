@@ -320,7 +320,6 @@ char* dump_runtime_data_extended(outdata *od)
 	for(int i=0;i<od->in->len;i++){
 		for(int j=0;j<od->in->npop;j++){
 			fwrite(&(od->in->data[i][j]), sizeof(double), 1, fout);	
-			printf(" %lf ", od->in->data[i][j]);
 		}
 		printf("\n");
 	}

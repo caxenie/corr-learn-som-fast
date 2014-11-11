@@ -21,13 +21,6 @@ runtime_struct.sim.xi = fread(fid, [1, runtime_struct.sim.tf_lrn_cross], 'double
 % extract the network data
 runtime_struct.sim.net.nsize = fread(fid, 1, 'short');
 for pidx = 1:runtime_struct.sim.net.nsize
-    runtime_struct.sim.net.pops(pidx).winput = zeros(1,runtime_struct.sim.net.pops(pidx).size);
-    runtime_struct.sim.net.pops(pidx).wcross = zeros(runtime_struct.sim.net.pops(pidx).size, runtime_struct.sim.net.pops(pidx).size);
-    runtime_struct.sim.net.pops(pidx).s = zeros(1, runtime_struct.sim.net.pops(pidx).size);
-    runtime_struct.sim.net.pops(pidx).a = zeros(1, runtime_struct.sim.net.pops(pidx).size);
-end
-
-for pidx = 1:runtime_struct.sim.net.nsize
     runtime_struct.sim.net.pops(pidx).id = fread(fid, 1, 'short');
     runtime_struct.sim.net.pops(pidx).size = fread(fid, 1, 'int');
     runtime_struct.sim.net.pops(pidx).winput = fread(fid, [1,runtime_struct.sim.net.pops(pidx).size], 'double');
@@ -40,7 +33,7 @@ end
 runtime_struct.sim.indata.npop = fread(fid, 1, 'int');
 runtime_struct.sim.indata.popsize = fread(fid, 1, 'int');
 runtime_struct.sim.indata.len = fread(fid, 1, 'int');
-%runtime_struct.sim.indata.data = fread(fid, [runtime_struct.sim.indata.npop, runtime_struct.sim.indata.len], 'double');
+runtime_struct.sim.indata.data = fread(fid, [runtime_struct.sim.indata.npop, runtime_struct.sim.indata.len], 'double');
 
 % close the file
 fclose(fid);

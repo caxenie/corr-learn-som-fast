@@ -21,12 +21,12 @@ indata* generate_input_data(int np, int psz, int l)
 
 	/* HERE EMBED THE RELATIONS */
 	for(int i = 0;i<id->len;i++){
-		for(int j = 0;j<id->npop-1;j++){
+		for(int j = 0;j<id->npop;j++){
 			rel_vars[i][j] = pow(base_var[i], 3);
 		}
 	}
         for(int i = 0;i<id->len;i++){
-                for(int j = 0;j<id->npop-1;j++){
+               for(int j = 0;j<id->npop;j++){
 			if(j==0) id->data[i][j] = base_var[i];
 			else id->data[i][j] = rel_vars[i][j];	
 		}
