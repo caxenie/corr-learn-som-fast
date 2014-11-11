@@ -317,8 +317,7 @@ char* dump_runtime_data_extended(outdata *od)
 	fwrite(&(od->in->npop), sizeof(int), 1, fout);
 	fwrite(&(od->in->popsize), sizeof(int), 1, fout);
 	fwrite(&(od->in->len), sizeof(int), 1, fout);
-	printf("inpop %d | posize %d | len %d \n", od->in->npop, od->in->popsize, od->in->len);
-	for(int i=0;od->in->len;i++){
+	for(int i=0;i<od->in->len;i++){
 		for(int j=0;j<od->in->npop;j++){
 			fwrite(&(od->in->data[i][j]), sizeof(double), 1, fout);	
 			printf(" %lf ", od->in->data[i][j]);

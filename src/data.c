@@ -25,12 +25,13 @@ indata* generate_input_data(int np, int psz, int l)
 			rel_vars[i][j] = pow(base_var[i], 3);
 		}
 	}
-	for (int k = 1;k<id->npop;k++){
-		for(int i = 0; i < id->len; i++){
-			id->data[i][0] = base_var[i];
-			id->data[i][k] = rel_vars[i][k];	
+        for(int i = 0;i<id->len;i++){
+                for(int j = 0;j<id->npop-1;j++){
+			if(j==0) id->data[i][j] = base_var[i];
+			else id->data[i][j] = rel_vars[i][j];	
 		}
-	}	
+	}
+	
 	return id;
 }	
 
