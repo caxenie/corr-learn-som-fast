@@ -23,18 +23,25 @@ runtime_struct.sim.net.nsize = fread(fid, 1, 'short');
 for pidx = 1:runtime_struct.sim.net.nsize
     runtime_struct.sim.net.pops(pidx).id = fread(fid, 1, 'short');
     runtime_struct.sim.net.pops(pidx).size = fread(fid, 1, 'int');
-    runtime_struct.sim.net.pops(pidx).Winput = fread(fid, [1,runtime_struct.sim.net.pops(pidx).size], 'double');
-    runtime_struct.sim.net.pops(pidx).Wcross = fread(fid, [runtime_struct.sim.net.pops(pidx).size,runtime_struct.sim.net.pops(pidx).size], 'double');
-    runtime_struct.sim.net.pops(pidx).s = fread(fid, [1,runtime_struct.sim.net.pops(pidx).size], 'double');
-    runtime_struct.sim.net.pops(pidx).a = fread(fid, [1,runtime_struct.sim.net.pops(pidx).size], 'double');
+    for nidx = 1:runtime_struct.sim.net.pops(pidx).size
+        runtime_struct.sim.net.pops(pidx).Winput(nidx) = fread(fid, 1, 'double');
+        for nnidx = 1:runtime_struct.sim.net.pops(pidx).size
+            runtime_struct.sim.net.pops(pidx).Wcross(nidx, nnidx) = fread(fid, 1, 'double');
+        end
+        runtime_struct.sim.net.pops(pidx).s(nidx) = fread(fid, 1, 'double');
+        runtime_struct.sim.net.pops(pidx).a(nidx) = fread(fid, 1, 'double');
+    end
 end
 
 % extract input data
 runtime_struct.sim.indata.npop = fread(fid, 1, 'int');
 runtime_struct.sim.indata.popsize = fread(fid, 1, 'int');
 runtime_struct.sim.indata.len = fread(fid, 1, 'int');
-runtime_struct.sim.indata.data = fread(fid, [runtime_struct.sim.indata.len, runtime_struct.sim.indata.npop], 'double');
-
+for lidx = 1:runtime_struct.sim.indata.len
+    for pidx = 1:runtime_struct.sim.indata.npop
+        runtime_struct.sim.indata.data(lidx, pidx) = fread(fid, 1, 'double');
+    end
+end
 % close the file
 fclose(fid);
 end

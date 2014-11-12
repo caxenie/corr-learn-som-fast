@@ -16,13 +16,11 @@ simulation* init_simulation(int nepochs, network*net)
 	s->eta = (double*)calloc(s->tf_lrn_cross, sizeof(double));
 	s->xi = (double*)calloc(s->tf_lrn_cross, sizeof(double));
 	s->alpha = parametrize_process(ALPHAI, ALPHAF, s->t0, s->tf_lrn_in, INVTIME);
-	s->sigma = parametrize_process((net->pops->size)/2, SIGMAF, s->t0, s->tf_lrn_in, INVTIME);
-	for (int i = 0;i<s->tf_lrn_cross;i++){
+	s->sigma = parametrize_process((net->pops->size)/10, SIGMAF, s->t0, s->tf_lrn_in, INVTIME);
+	for (int i = 0;i<s->tf_lrn_cross;i++)
 		s->eta[i] = ETA;
-	}
-	for (int i = 0;i<s->tf_lrn_cross;i++){
+	for (int i = 0;i<s->tf_lrn_cross;i++)
 		s->xi[i] = XI;
-	}
 	s->n = net;
 	return s;
 }
@@ -61,22 +59,18 @@ outdata* run_simulation(indata *in, simulation *s)
 					for(int nidx = 0; nidx<s->n->pops[pidx].size;nidx++){
 						/* compute sensory elicited activation */
 						cur_act[nidx] = (1/(sqrt(2*M_PI)*s->n->pops[pidx].s[nidx]))*
-							   exp(-pow((insample - s->n->pops[pidx].Winput[nidx]),2)/2*pow(s->n->pops[pidx].s[nidx], 2));
+							   exp(-pow((insample - s->n->pops[pidx].Winput[nidx]),2)/(2*pow(s->n->pops[pidx].s[nidx], 2)));
 					}	
-	
 					/* normalize the activity vector of the population */
-					for(int snid = 0; snid<s->n->pops[pidx].size; snid++){
+					for(int snid = 0; snid<s->n->pops[pidx].size; snid++)
 						tot_act	+= cur_act[snid];
-					}
-					for(int snid = 0; snid<s->n->pops[pidx].size; snid++){	
+					for(int snid = 0; snid<s->n->pops[pidx].size; snid++)	
 						cur_act[snid] /= tot_act;
-					}
 					/* update the activity for next iteration */
-					for(int nidx = 0; nidx<s->n->pops[pidx].size;nidx++){
+					for(int nidx = 0; nidx<s->n->pops[pidx].size;nidx++)
 						s->n->pops[pidx].a[nidx] = (1-s->eta[tidx])*s->n->pops[pidx].a[nidx] + s->eta[tidx]*cur_act[nidx];
-					}
 					/* competition step - find the neuron with maximum activity */
-					/* find the neuron with maximum activity and it's index in the population */
+					/* find the neuron with maximum activity and its index in the population */
 					for(int snid = 0; snid<s->n->pops[pidx].size; snid++){ 
 						if(s->n->pops[pidx].a[snid] > win_act){
 							win_act = s->n->pops[pidx].a[snid];
@@ -95,7 +89,6 @@ outdata* run_simulation(indata *in, simulation *s)
 						
 					}/* end for each neuron in the population */
 				    }/* end loop through populations */	
-
 				}/* end loop of sensory data presentation */
 			}/* end loop for training input data distribution */
 
@@ -111,20 +104,18 @@ outdata* run_simulation(indata *in, simulation *s)
                                         for(int nidx = 0; nidx<s->n->pops[pidx].size;nidx++){
                                                 /* compute sensory elicited activation */
                                                 cur_act[nidx] = (1/(sqrt(2*M_PI)*s->n->pops[pidx].s[nidx]))*
-                                                           exp(-pow((insample - s->n->pops[pidx].Winput[nidx]),2)/2*pow(s->n->pops[pidx].s[nidx], 2));
+                                                           exp(-pow((insample - s->n->pops[pidx].Winput[nidx]),2)/(2*pow(s->n->pops[pidx].s[nidx], 2)));
                                         }
                                         /* normalize the activity vector of the population */
-                                        for(int snid = 0; snid<s->n->pops[pidx].size; snid++){
+                                        for(int snid = 0; snid<s->n->pops[pidx].size; snid++)
                                                 tot_act += cur_act[snid];
-                                        }
-					for(int snid = 0; snid<s->n->pops[pidx].size; snid++){
+					for(int snid = 0; snid<s->n->pops[pidx].size; snid++)
 	                                        cur_act[snid] /= tot_act;
-					}
 					/* update the activity for next iteration */
-                                        for(int nidx = 0; nidx<s->n->pops[pidx].size;nidx++){
+                                        for(int nidx = 0; nidx<s->n->pops[pidx].size;nidx++)
                                                 s->n->pops[pidx].a[nidx] = (1-s->eta[tidx])*s->n->pops[pidx].a[nidx] + s->eta[tidx]*cur_act[nidx];
-                                        }
 				 }/* end loop for each population */
+				        
 					/* apply the learning rule */
 					int pidx = 0;
 					switch(LEARNING_RULE){	

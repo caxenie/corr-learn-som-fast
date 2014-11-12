@@ -1,6 +1,5 @@
 #include "simulation.h"
 
-#define MAX_EPOCHS	1000
 #define N_POP		2
 #define POP_SIZE	100
 #define DATASET_LEN	1500

@@ -1,6 +1,6 @@
 % load the data from the file
 clear all; clc;
-rdata = load_runtime_data('../2014-11-11__13:08:36_cln_extended_runtime_data_1000_epochs_2_populations_100_neurons');
+rdata = load_runtime_data('../2014-11-12__17:16:08_cln_extended_runtime_data_400_epochs_2_populations_100_neurons');
 close all; 
 % plot runtime and learning parameters of the network
 figure(1);
@@ -72,7 +72,7 @@ for ppidx = 1:rdata.sim.indata.npop
     set(ax2, 'XLim', [ min(rdata.sim.net.pops(ppidx).Winput), max(rdata.sim.net.pops(ppidx).Winput)]);
     xlabel('neuron preferred values'); ylabel('learned tuning curves shapes');
     % the density of the tuning curves (density function) - should increase
-    % with the increase of the distribution of sensory data (directly proportional with p(s))
+    % with the increase of the distribution of sensory data (directly proportional with the prior, p(s))
     % stimuli associated with the peaks of the tuning curves
     subplot(4, 1, 4);
     hist(rdata.sim.net.pops(ppidx).Winput, 50); box off;ylabel('# of allocated neurons for a value');

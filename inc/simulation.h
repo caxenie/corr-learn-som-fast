@@ -2,7 +2,7 @@
 #include "data.h"
 
 /* simulation constant parameters */
-#define MAX_EPOCHS      1000
+#define MAX_EPOCHS      400
 #define N_POP           2
 #define POP_SIZE        100
 #define DATASET_LEN     1500
@@ -58,7 +58,6 @@ outdata* run_simulation(indata *in, simulation *s);
 char* dump_runtime_data(outdata *od);
 /* dump the runtime data to file on disk - explicit sequential write */
 char* dump_runtime_data_extended(outdata *od);
-
 
 
 /* parametrize adaptive parameters */
