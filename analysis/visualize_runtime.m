@@ -1,7 +1,7 @@
 % load the data from the file
-clear all; clc;
-rdata = load_runtime_data('../2014-11-12__17:16:08_cln_extended_runtime_data_400_epochs_2_populations_100_neurons');
-close all; 
+function visualize_runtime(filein)
+rdata = load_runtime_data(filein);
+close all;
 % plot runtime and learning parameters of the network
 figure(1);
 set(gcf, 'color', 'white');
@@ -24,7 +24,7 @@ for pidx = 1:rdata.sim.net.nsize
     figure;
     set(gcf, 'color', 'white');
     subplot(3, 1, 1);
-    plot(rdata.sim.net.pops(pidx).Winput, sprintf('.%s',idcolor(pidx))); xlabel('cross learning epochs'); 
+    plot(rdata.sim.net.pops(pidx).Winput, sprintf('.%s',idcolor(pidx))); xlabel('cross learning epochs');
     ylabel(sprintf('Winput - pop %d', pidx));
     grid off; box off; title(sprintf('Input weight vector, adapt %d epochs', rdata.sim.tf_lrn_in));
     subplot(3, 1, 2);
@@ -46,7 +46,6 @@ grid off; box off; title('Input relation');
 for ppidx = 1:rdata.sim.indata.npop
     figure;
     set(gcf, 'color', 'white');
-    t = 1:rdata.sim.indata.len;
     subplot(4, 1, 1);
     plot(rdata.sim.indata.data(:, ppidx), sprintf('.%s',idcolor(ppidx))); xlabel('samples');
     grid off; box off; title(sprintf('Input data - pop %d', ppidx));
@@ -78,4 +77,4 @@ for ppidx = 1:rdata.sim.indata.npop
     hist(rdata.sim.net.pops(ppidx).Winput, 50); box off;ylabel('# of allocated neurons for a value');
     xlabel('input value range');
 end
-
+end

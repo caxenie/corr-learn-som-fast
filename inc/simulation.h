@@ -11,6 +11,8 @@
 #define SIGMAF 1.0f
 #define ETA   1.0f
 #define XI    0.001f
+#define WRAP_POP 0
+#define ASYMM_FUNC 0
 
 /* adaptive processes parametruization types */
 enum{

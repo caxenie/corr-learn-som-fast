@@ -1,7 +1,7 @@
 #include "data.h"
 
 /* read input data from file and populate struct */
-indata* generate_input_data(int np, int psz, int l)
+indata* generate_input_data(int np, int psz, int l, int rtype)
 {
 	indata *id = (indata*)calloc(1, sizeof(indata));
 	double *base_var = generate_rnd_vector(DIST_TYPE, RANGE, l, NU_DIST_MODEL);
@@ -20,11 +20,29 @@ indata* generate_input_data(int np, int psz, int l)
 		rel_vars[i] = (double*)calloc(id->npop-1, sizeof(double));
 
 	/* HERE EMBED THE RELATIONS */
-	for(int i = 0;i<id->len;i++){
-		for(int j = 0;j<id->npop;j++){
-			rel_vars[i][j] = pow(base_var[i], 2);
-		}
+	/* check how many variables we haev in the network */
+	switch(id->npop){
+		case 2:
+			for(int i = 0;i<id->len;i++){
+				for(int j = 0;j<id->npop;j++){
+					switch(rtype){
+						case LINEAR:	
+							rel_vars[i][j] = RANGE*pow(base_var[i], 1);
+						break;
+						case ORDER2:
+							rel_vars[i][j] = pow(base_var[i], 2);
+						break;
+						case ORDER3:
+							rel_vars[i][j] = pow(base_var[i], 3);
+						break;
+						case SINE:
+							rel_vars[i][j] = sin(base_var[i]);
+						break;
+					}	
+				}		
+			}
 	}
+
         for(int i = 0;i<id->len;i++){
                for(int j = 0;j<id->npop;j++){
 			if(j==0) id->data[i][j] = base_var[i];

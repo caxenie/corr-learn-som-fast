@@ -3,11 +3,13 @@
 #include <unistd.h>
 #include <math.h>
 
+/* data distribution type */
 enum{
         UNIFORM = 0,
         NONUNIFORM
 };
 
+/* non-uniform distribution type */
 enum{
         INCPOWERLAW = 0,
         DECPOWERLAW,
@@ -15,9 +17,18 @@ enum{
         CONVEX
 };
 
+/* relation type */
+enum{
+	LINEAR = 1,
+	ORDER2, 
+	ORDER3,
+	SINE
+};
+
+#define REL_TYPE LINEAR
 #define DIST_TYPE UNIFORM
 #define NU_DIST_MODEL INCPOWERLAW
-#define RANGE 1
+#define RANGE 3
 
 /* floating point radom number generator between 0 and 1 */
 double randf();

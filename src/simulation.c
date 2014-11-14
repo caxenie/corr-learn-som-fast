@@ -8,7 +8,7 @@ simulation* init_simulation(int nepochs, network*net)
 
 	s->max_epochs = nepochs;
 	s->t0 = 0;
-	s->tf_lrn_in = s->max_epochs/10;
+	s->tf_lrn_in = s->max_epochs/4;
 	s->tf_lrn_cross = s->max_epochs;
 	
 	s->alpha = (double*)calloc(s->tf_lrn_in, sizeof(double));
@@ -16,7 +16,7 @@ simulation* init_simulation(int nepochs, network*net)
 	s->eta = (double*)calloc(s->tf_lrn_cross, sizeof(double));
 	s->xi = (double*)calloc(s->tf_lrn_cross, sizeof(double));
 	s->alpha = parametrize_process(ALPHAI, ALPHAF, s->t0, s->tf_lrn_in, INVTIME);
-	s->sigma = parametrize_process((net->pops->size)/10, SIGMAF, s->t0, s->tf_lrn_in, INVTIME);
+	s->sigma = parametrize_process((net->pops->size)/3, SIGMAF, s->t0, s->tf_lrn_in, INVTIME);
 	for (int i = 0;i<s->tf_lrn_cross;i++)
 		s->eta[i] = ETA;
 	for (int i = 0;i<s->tf_lrn_cross;i++)
@@ -79,14 +79,24 @@ outdata* run_simulation(indata *in, simulation *s)
 					}
 					for(int nidx = 0; nidx<s->n->pops[pidx].size;nidx++){
 						/* compute the neighborhood kernel */
-						hwi[nidx] = exp(-pow(fabs(nidx -  win_idx), 2)/(2*pow(s->sigma[tidx], 2)));
+						if(!WRAP_POP)
+							/* if we do not treat boundary effects use traditional neighborhood function */
+							hwi[nidx] = exp(-pow(fabs(nidx -  win_idx), 2)/(2*pow(s->sigma[tidx], 2)));
+						else
+							/* wrap up the population to avoid boundary effects */
+				                        /* dist = min{|i-j|, N - |i-j|} */
+			        	                hwi[nidx] = exp(-pow(MIN(fabs(nidx-win_idx), s->n->pops[pidx].size-fabs(nidx-win_idx)), 2)/(2*pow(s->sigma[tidx], 2)));
 						/* compute the sensory input synaptic weight */
 						s->n->pops[pidx].Winput[nidx] += s->alpha[tidx]*hwi[nidx]*(insample - s->n->pops[pidx].Winput[nidx]); 
 						/* update the shape of the tuning curve for the current neuron */
-						s->n->pops[pidx].s[nidx] += s->alpha[tidx]*(1/(sqrt(2*M_PI)*s->sigma[tidx]))*
-									    exp(-pow(fabs(nidx -  win_idx), 2)/(2*pow(s->sigma[tidx], 2)))*
-									    (pow((insample - s->n->pops[pidx].Winput[nidx]) , 2) - pow(s->n->pops[pidx].s[nidx], 2));
-						
+						if(!ASYMM_FUNC)
+							s->n->pops[pidx].s[nidx] += s->alpha[tidx]*
+										    exp(-pow(fabs(nidx -  win_idx), 2)/(2*pow(s->sigma[tidx], 2)))*
+										    (pow((insample - s->n->pops[pidx].Winput[nidx]) , 2) - pow(s->n->pops[pidx].s[nidx], 2));
+						else
+							s->n->pops[pidx].s[nidx] += s->alpha[tidx]*0.005*
+                                                                        	    exp(-pow(fabs(nidx -  win_idx), 2)/(2*pow(s->sigma[tidx], 2)))*
+                                        	                                    (pow((insample - s->n->pops[pidx].Winput[nidx]) , 2) - pow(s->n->pops[pidx].s[nidx], 2));
 					}/* end for each neuron in the population */
 				    }/* end loop through populations */	
 				}/* end loop of sensory data presentation */
@@ -312,7 +322,6 @@ char* dump_runtime_data_extended(outdata *od)
 		for(int j=0;j<od->in->npop;j++){
 			fwrite(&(od->in->data[i][j]), sizeof(double), 1, fout);	
 		}
-		printf("\n");
 	}
         fclose(fout);
         return nfout;
