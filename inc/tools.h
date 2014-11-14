@@ -22,7 +22,8 @@ enum{
 	LINEAR = 1,
 	ORDER2, 
 	ORDER3,
-	SINE
+	SINE,
+	COMPLEX
 };
 
 #define REL_TYPE LINEAR

@@ -85,7 +85,8 @@ outdata* run_simulation(indata *in, simulation *s)
 						else
 							/* wrap up the population to avoid boundary effects */
 				                        /* dist = min{|i-j|, N - |i-j|} */
-			        	                hwi[nidx] = exp(-pow(MIN(fabs(nidx-win_idx), s->n->pops[pidx].size-fabs(nidx-win_idx)), 2)/(2*pow(s->sigma[tidx], 2)));
+			        	                hwi[nidx] = exp(-pow(MIN(fabs(nidx-win_idx), s->n->pops[pidx].size-fabs(nidx-win_idx)), 2)/
+								       (2*pow(s->sigma[tidx], 2)));
 						/* compute the sensory input synaptic weight */
 						s->n->pops[pidx].Winput[nidx] += s->alpha[tidx]*hwi[nidx]*(insample - s->n->pops[pidx].Winput[nidx]); 
 						/* update the shape of the tuning curve for the current neuron */
@@ -131,18 +132,17 @@ outdata* run_simulation(indata *in, simulation *s)
 					switch(LEARNING_RULE){	
 						case HEBB:
 							/* cross-modal hebbian learning */
-							for(int i=0;i<s->n->pops[pidx].size;i++){
-								for(int j=0; j<s->n->pops[pidx].size; j++){
+							for (int idx = 0; idx<s->n->nsize; idx++){
+								/* shuffle the populations ids for updating */
+								//rand()%(n->nsize);							
+								
+								for(int i=0;i<s->n->pops[pidx].size;i++){
+								  for(int j=0; j<s->n->pops[pidx].size; j++){
 									s->n->pops[0].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[0].Wcross[i][j]+
 													s->xi[tidx]*s->n->pops[0].a[i]*s->n->pops[1].a[j];
-								}
+								  }
+							        }
 							}
-							for(int i=0;i<s->n->pops[pidx].size;i++){
-                                                                for(int j=0; j<s->n->pops[pidx].size; j++){
-                                                                        s->n->pops[1].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[1].Wcross[i][j]+     
-                                                                                                        s->xi[tidx]*s->n->pops[1].a[i]*s->n->pops[0].a[j];
-                                                                }
-                                                        }
 						break;
 						case COVARIANCE:
 							/* compute the mean value decay */
@@ -153,7 +153,8 @@ outdata* run_simulation(indata *in, simulation *s)
                                                                         avg_act[pidx][snid] = (1-omega)*avg_act[pidx][snid] + omega*s->n->pops[pidx].a[snid];
                                                                 }
 							}
-							/* cross-modal covariance learning rule */
+						/* cross-modal covariance learning rule */
+						for (int idx = 0; idx<s->n->nsize; idx ++){
 							for(int i=0;i<s->n->pops[pidx].size;i++){
                                 	                        for(int j=0; j<s->n->pops[pidx].size; j++){
 							              s->n->pops[0].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[0].Wcross[i][j]+
@@ -162,17 +163,11 @@ outdata* run_simulation(indata *in, simulation *s)
 												    (s->n->pops[1].a[j] - avg_act[1][j]);
                         	                                }
                 	                                }
-        	                                        for(int i=0;i<s->n->pops[pidx].size;i++){
-                                        	                for(int j=0; j<s->n->pops[pidx].size; j++){
-                                                                      s->n->pops[1].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[1].Wcross[i][j]+
-                                                                                                   s->xi[tidx]*
-												   (s->n->pops[1].a[i] - avg_act[1][i])*
-												   (s->n->pops[0].a[j] - avg_act[0][j]);
-                                                       	        }
-							}
+						}
 						break;
 						case OJA:
-							/* compute the global synaptic strength in the likage */
+						    /* compute the global synaptic strength in the likage */
+						    for (int idx = 0; idx<s->n->nsize; idx ++){
 							for(int i=0;i<s->n->pops[pidx].size;i++){
                                                                 for(int j=0; j<s->n->pops[pidx].size; j++){
                                                                         s->n->pops[0].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[0].Wcross[i][j]+
@@ -180,14 +175,10 @@ outdata* run_simulation(indata *in, simulation *s)
 									sum_wcross[0] += s->n->pops[0].Wcross[i][j];
                                                                 }
                                                         }
-                                                        for(int i=0;i<s->n->pops[pidx].size;i++){
-                                                                for(int j=0; j<s->n->pops[pidx].size; j++){
-                                                                        s->n->pops[1].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[1].Wcross[i][j]+
-                                                                                                        s->xi[tidx]*s->n->pops[1].a[i]*s->n->pops[0].a[j];
-									sum_wcross[1] += s->n->pops[1].Wcross[i][j];
-                                                                }
-                                                        }
-							/* compute the synaptic weights using Oja's local normalizing PCA rule */
+							}
+						
+						    /* compute the synaptic weights using Oja's local normalizing PCA rule */
+						    for (int idx = 0; idx<s->n->nsize; idx ++){			 
 							for(int i=0;i<s->n->pops[pidx].size;i++){
                                                                 for(int j=0; j<s->n->pops[pidx].size; j++){
                                                                         s->n->pops[0].Wcross[i][j] = ((1-s->xi[tidx])*s->n->pops[0].Wcross[i][j]+
@@ -195,13 +186,7 @@ outdata* run_simulation(indata *in, simulation *s)
 			                                                                        	sqrt(sum_wcross[0]);
                                                                 }
                                                         }
-                                                        for(int i=0;i<s->n->pops[pidx].size;i++){
-                                                                for(int j=0; j<s->n->pops[pidx].size; j++){
-                                                                        s->n->pops[1].Wcross[i][j] = ((1-s->xi[tidx])*s->n->pops[1].Wcross[i][j]+
-                                                                                                        s->xi[tidx]*s->n->pops[1].a[i]*s->n->pops[0].a[j])/
-                                                                        				sqrt(sum_wcross[1]);
-                                                                }
-                                                        }
+						}
 						break;
 					}/* and learning rule selector */
 			}/* end dataset loop for cross-modal learning */
@@ -356,3 +341,4 @@ double* parametrize_process(double v0, double vf, int t0, int tf, short type)
 	}
 	return out;
 }
+

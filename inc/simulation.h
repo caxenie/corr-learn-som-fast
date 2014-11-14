@@ -3,7 +3,7 @@
 
 /* simulation constant parameters */
 #define MAX_EPOCHS      400
-#define N_POP           2
+#define N_POP           3
 #define POP_SIZE        100
 #define DATASET_LEN     1500
 #define ALPHAI 0.1f
@@ -64,4 +64,3 @@ char* dump_runtime_data_extended(outdata *od);
 
 /* parametrize adaptive parameters */
 double* parametrize_process(double v0, double vf, int t0, int tf, short type);
-
