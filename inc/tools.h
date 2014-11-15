@@ -26,10 +26,10 @@ enum{
 	COMPLEX
 };
 
-#define REL_TYPE LINEAR
+#define REL_TYPE ORDER2
 #define DIST_TYPE UNIFORM
 #define NU_DIST_MODEL INCPOWERLAW
-#define RANGE 3
+#define RANGE 1
 
 /* floating point radom number generator between 0 and 1 */
 double randf();

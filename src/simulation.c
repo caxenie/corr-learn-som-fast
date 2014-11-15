@@ -129,20 +129,22 @@ outdata* run_simulation(indata *in, simulation *s)
 				        
 					/* apply the learning rule */
 					int pidx = 0;
+					/* utils for pops ids shuffling */
+					unsigned int base_idx[] = {0,1,2};
+					const unsigned int pre_post_pair = 2;
 					switch(LEARNING_RULE){	
 						case HEBB:
 							/* cross-modal hebbian learning */
-							for (int idx = 0; idx<s->n->nsize; idx++){
+							do{
 								/* shuffle the populations ids for updating */
-								//rand()%(n->nsize);							
-								
+								int* cur_ids = base_idx;
 								for(int i=0;i<s->n->pops[pidx].size;i++){
 								  for(int j=0; j<s->n->pops[pidx].size; j++){
-									s->n->pops[0].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[0].Wcross[i][j]+
-													s->xi[tidx]*s->n->pops[0].a[i]*s->n->pops[1].a[j];
+									s->n->pops[cur_ids[0]].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[cur_ids[0]].Wcross[i][j]+
+													s->xi[tidx]*s->n->pops[cur_ids[0]].a[i]*s->n->pops[cur_ids[1]].a[j];
 								  }
 							        }
-							}
+							}while(shuffle_pops_ids(base_idx, s->n->nsize, pre_post_pair));
 						break;
 						case COVARIANCE:
 							/* compute the mean value decay */
@@ -154,39 +156,45 @@ outdata* run_simulation(indata *in, simulation *s)
                                                                 }
 							}
 						/* cross-modal covariance learning rule */
-						for (int idx = 0; idx<s->n->nsize; idx ++){
-							for(int i=0;i<s->n->pops[pidx].size;i++){
+						do{
+                                                    /* shuffle the populations ids for updating */
+                                                    int* cur_ids = base_idx;
+							   for(int i=0;i<s->n->pops[pidx].size;i++){
                                 	                        for(int j=0; j<s->n->pops[pidx].size; j++){
-							              s->n->pops[0].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[0].Wcross[i][j]+
+							              s->n->pops[cur_ids[0]].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[cur_ids[0]].Wcross[i][j]+
                                                                                                     s->xi[tidx]*
-												    (s->n->pops[0].a[i] - avg_act[0][i])*
-												    (s->n->pops[1].a[j] - avg_act[1][j]);
+												    (s->n->pops[cur_ids[0]].a[i] - avg_act[cur_ids[0]][i])*
+												    (s->n->pops[cur_ids[1]].a[j] - avg_act[cur_ids[1]][j]);
                         	                                }
                 	                                }
-						}
+						}while(shuffle_pops_ids(base_idx, s->n->nsize, pre_post_pair));
 						break;
 						case OJA:
 						    /* compute the global synaptic strength in the likage */
-						    for (int idx = 0; idx<s->n->nsize; idx ++){
+                                                do{     
+                                                    /* shuffle the populations ids for updating */
+                                                    int* cur_ids = base_idx;
 							for(int i=0;i<s->n->pops[pidx].size;i++){
                                                                 for(int j=0; j<s->n->pops[pidx].size; j++){
-                                                                        s->n->pops[0].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[0].Wcross[i][j]+
-                                                                                                        s->xi[tidx]*s->n->pops[0].a[i]*s->n->pops[1].a[j];
-									sum_wcross[0] += s->n->pops[0].Wcross[i][j];
+                                                                        s->n->pops[cur_ids[0]].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[cur_ids[0]].Wcross[i][j]+
+                                                                                                        s->xi[tidx]*s->n->pops[cur_ids[0]].a[i]*s->n->pops[cur_ids[1]].a[j];
+									sum_wcross[cur_ids[0]] += s->n->pops[cur_ids[0]].Wcross[i][j];
                                                                 }
                                                         }
-							}
-						
+						}while(shuffle_pops_ids(base_idx, s->n->nsize, pre_post_pair));
+				
 						    /* compute the synaptic weights using Oja's local normalizing PCA rule */
-						    for (int idx = 0; idx<s->n->nsize; idx ++){			 
+                                                do{
+                                                    /* shuffle the populations ids for updating */
+                                                    int* cur_ids = base_idx;
 							for(int i=0;i<s->n->pops[pidx].size;i++){
                                                                 for(int j=0; j<s->n->pops[pidx].size; j++){
-                                                                        s->n->pops[0].Wcross[i][j] = ((1-s->xi[tidx])*s->n->pops[0].Wcross[i][j]+
-                                                                                                        s->xi[tidx]*s->n->pops[0].a[i]*s->n->pops[1].a[j])/
-			                                                                        	sqrt(sum_wcross[0]);
+                                                                        s->n->pops[cur_ids[0]].Wcross[i][j] = ((1-s->xi[tidx])*s->n->pops[cur_ids[0]].Wcross[i][j]+
+                                                                                                        s->xi[tidx]*s->n->pops[cur_ids[0]].a[i]*s->n->pops[cur_ids[1]].a[j])/
+			                                                                        	sqrt(sum_wcross[cur_ids[0]]);
                                                                 }
                                                         }
-						}
+						}while(shuffle_pops_ids(base_idx, s->n->nsize, pre_post_pair));
 						break;
 					}/* and learning rule selector */
 			}/* end dataset loop for cross-modal learning */
@@ -341,4 +349,37 @@ double* parametrize_process(double v0, double vf, int t0, int tf, short type)
 	}
 	return out;
 }
+
+unsigned int shuffle_pops_ids(unsigned int *ar, size_t n, unsigned int k)
+{
+    unsigned int finished = 0;
+    unsigned int changed = 0;
+    unsigned int i;
+
+    if (k > 0) {
+        for (i = k - 1; !finished && !changed; i--) {
+            if (ar[i] < (n - 1) - (k - 1) + i) {
+                /* Increment this element */
+                ar[i]++;
+                if (i < k - 1) {
+                    /* Turn the elements after it into a linear sequence */
+                    unsigned int j;
+                    for (j = i + 1; j < k; j++) {
+                        ar[j] = ar[j - 1] + 1;
+                    }
+                }
+                changed = 1;
+            }
+            finished = i == 0;
+        }
+        if (!changed) {
+            /* Reset to first combination */
+            for (i = 0; i < k; i++) {
+                ar[i] = i;
+            }
+        }
+    }
+    return changed;
+}
+
 

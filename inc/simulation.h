@@ -1,9 +1,10 @@
 #include "network.h"
 #include "data.h"
+#include <stddef.h>
 
 /* simulation constant parameters */
 #define MAX_EPOCHS      400
-#define N_POP           3
+#define N_POP           2
 #define POP_SIZE        100
 #define DATASET_LEN     1500
 #define ALPHAI 0.1f
@@ -64,3 +65,5 @@ char* dump_runtime_data_extended(outdata *od);
 
 /* parametrize adaptive parameters */
 double* parametrize_process(double v0, double vf, int t0, int tf, short type);
+/* shuffle populations indices for circular permutations in hebbian update */
+unsigned int shuffle_pops_ids(unsigned int *ar, size_t n, unsigned int k);
