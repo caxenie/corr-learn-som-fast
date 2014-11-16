@@ -29,7 +29,7 @@ enum{
 	OJA
 };
 
-#define LEARNING_RULE COVARIANCE
+#define LEARNING_RULE HEBB
 
 /* simulation parameters */
 typedef struct{

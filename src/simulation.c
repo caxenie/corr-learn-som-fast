@@ -138,6 +138,7 @@ outdata* run_simulation(indata *in, simulation *s)
 							do{
 								/* shuffle the populations ids for updating */
 								int* cur_ids = base_idx;
+								printf("%d %d\n", cur_ids[0], cur_ids[1]);
 								for(int i=0;i<s->n->pops[pidx].size;i++){
 								  for(int j=0; j<s->n->pops[pidx].size; j++){
 									s->n->pops[cur_ids[0]].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[cur_ids[0]].Wcross[i][j]+
@@ -159,7 +160,8 @@ outdata* run_simulation(indata *in, simulation *s)
 						do{
                                                     /* shuffle the populations ids for updating */
                                                     int* cur_ids = base_idx;
-							   for(int i=0;i<s->n->pops[pidx].size;i++){
+						    printf("%d %d\n", cur_ids[0], cur_ids[1]);
+						    for(int i=0;i<s->n->pops[pidx].size;i++){
                                 	                        for(int j=0; j<s->n->pops[pidx].size; j++){
 							              s->n->pops[cur_ids[0]].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[cur_ids[0]].Wcross[i][j]+
                                                                                                     s->xi[tidx]*
@@ -174,6 +176,7 @@ outdata* run_simulation(indata *in, simulation *s)
                                                 do{     
                                                     /* shuffle the populations ids for updating */
                                                     int* cur_ids = base_idx;
+						    	printf("%d %d\n", cur_ids[0], cur_ids[1]);
 							for(int i=0;i<s->n->pops[pidx].size;i++){
                                                                 for(int j=0; j<s->n->pops[pidx].size; j++){
                                                                         s->n->pops[cur_ids[0]].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[cur_ids[0]].Wcross[i][j]+

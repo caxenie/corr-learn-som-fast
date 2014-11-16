@@ -29,7 +29,7 @@ enum{
 #define REL_TYPE ORDER2
 #define DIST_TYPE UNIFORM
 #define NU_DIST_MODEL INCPOWERLAW
-#define RANGE 1
+#define RANGE 3
 
 /* floating point radom number generator between 0 and 1 */
 double randf();
