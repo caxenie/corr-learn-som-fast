@@ -7,13 +7,13 @@
 #define N_POP           2
 #define POP_SIZE        100
 #define DATASET_LEN     1500
-#define ALPHAI 0.1f
-#define ALPHAF 0.001f
-#define SIGMAF 1.0f
-#define ETA   1.0f
-#define XI    0.001f
-#define WRAP_POP 0
-#define ASYMM_FUNC 0
+#define ALPHAI 		0.1f
+#define ALPHAF 		0.001f
+#define SIGMAF 		1.0f
+#define ETA   		1.0f
+#define XI    		0.001f
+#define WRAP_POP 	0
+#define ASYMM_FUNC 	0
 
 /* adaptive processes parametruization types */
 enum{
@@ -26,10 +26,9 @@ enum{
 enum{
 	HEBB = 0, 
 	COVARIANCE,
-	OJA
 };
 
-#define LEARNING_RULE HEBB
+#define LEARNING_RULE COVARIANCE
 
 /* simulation parameters */
 typedef struct{
@@ -65,5 +64,7 @@ char* dump_runtime_data_extended(outdata *od);
 
 /* parametrize adaptive parameters */
 double* parametrize_process(double v0, double vf, int t0, int tf, short type);
-/* shuffle populations indices for circular permutations in hebbian update */
+/* number of shuffles for maps ids for cross-modal circular permutation in Hebbian learning rule */
+long num_shuffles(int n, int r);
+/* shuffle the maps ids for cross-modal circular permutation in Hebbian learning rule */
 unsigned int shuffle_pops_ids(unsigned int *ar, size_t n, unsigned int k);

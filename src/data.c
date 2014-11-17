@@ -27,7 +27,7 @@ indata* generate_input_data(int np, int psz, int l, int rtype)
 				for(int j = 0;j<id->npop;j++){
 					switch(rtype){
 						case LINEAR:	
-							rel_vars[i][j] = RANGE*pow(base_var[i], 1);
+							rel_vars[i][j] = 3*RANGE*pow(base_var[i], 1);
 						break;
 						case ORDER2:
 							rel_vars[i][j] = pow(base_var[i], 2);
@@ -36,7 +36,7 @@ indata* generate_input_data(int np, int psz, int l, int rtype)
 							rel_vars[i][j] = pow(base_var[i], 3);
 						break;
 						case SINE:
-							rel_vars[i][j] = sin(base_var[i]);
+							rel_vars[i][j] = sin(3*RANGE*base_var[i]);
 						break;
 					}	
 				}		
@@ -46,7 +46,7 @@ indata* generate_input_data(int np, int psz, int l, int rtype)
 		    switch(rtype){
 			case COMPLEX:
 			for(int i = 0;i<id->len;i++){
-				rel_vars[i][0] = RANGE*pow(base_var[i], 1);
+				rel_vars[i][0] = 3*RANGE*pow(base_var[i], 1);
 				rel_vars[i][1] = pow(base_var[i], 2); 
 			}
 		     }
@@ -55,7 +55,7 @@ indata* generate_input_data(int np, int psz, int l, int rtype)
 		    switch(rtype){
 			case COMPLEX:
 			for(int i = 0;i<id->len;i++){
-				rel_vars[i][0] = RANGE*pow(base_var[i], 1);
+				rel_vars[i][0] = 3*RANGE*pow(base_var[i], 1);
 				rel_vars[i][1] = pow(base_var[i], 3);
 				rel_vars[i][2] = pow(base_var[i], 2);
 			}

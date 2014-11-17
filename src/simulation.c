@@ -41,6 +41,23 @@ outdata* run_simulation(indata *in, simulation *s)
 	double omega = 0.0f;
 	double *hwi = (double*)calloc(s->n->pops[0].size, sizeof(double));
 	outdata *runtime = (outdata*)calloc(1, sizeof(outdata));
+	/* utils for pops ids shuffling */
+	int base_idx[] = {0,1,2};
+	const int pre_post_pair = 2;
+	int sol_idx = 0;
+	int** sol = (int**)calloc(pre_post_pair*num_shuffles(s->n->nsize, pre_post_pair), sizeof(int*));
+	for(int i = 0; i<pre_post_pair*num_shuffles(s->n->nsize, pre_post_pair);i++)
+        	sol[i] = (int*)calloc(pre_post_pair, sizeof(int));
+	/* shuffle maps ids */
+	do{
+		/* shuffle the populations ids for updating */
+		int* cur_ids = base_idx;
+		sol[sol_idx][0] = cur_ids[0];
+		sol[sol_idx][1] = cur_ids[1];
+		sol[sol_idx+num_shuffles(s->n->nsize, pre_post_pair)][0] = cur_ids[1];
+		sol[sol_idx+num_shuffles(s->n->nsize, pre_post_pair)][1] = cur_ids[0];
+		sol_idx ++;
+	}while(shuffle_pops_ids(base_idx, s->n->nsize, pre_post_pair));
 
 	/* correlation learning loop */
         for(int tidx = s->t0; tidx<s->tf_lrn_cross; tidx++){	
@@ -127,25 +144,20 @@ outdata* run_simulation(indata *in, simulation *s)
                                                 s->n->pops[pidx].a[nidx] = (1-s->eta[tidx])*s->n->pops[pidx].a[nidx] + s->eta[tidx]*cur_act[nidx];
 				 }/* end loop for each population */
 				        
-					/* apply the learning rule */
+					/* select the learning rule type */
 					int pidx = 0;
-					/* utils for pops ids shuffling */
-					unsigned int base_idx[] = {0,1,2};
-					const unsigned int pre_post_pair = 2;
 					switch(LEARNING_RULE){	
 						case HEBB:
 							/* cross-modal hebbian learning */
-							do{
-								/* shuffle the populations ids for updating */
-								int* cur_ids = base_idx;
-								printf("%d %d\n", cur_ids[0], cur_ids[1]);
+							/* update the synaptic weights for cross-modal interaction */			
+						        for(int si =0;si<pre_post_pair*num_shuffles(s->n->nsize, pre_post_pair);si++){
 								for(int i=0;i<s->n->pops[pidx].size;i++){
-								  for(int j=0; j<s->n->pops[pidx].size; j++){
-									s->n->pops[cur_ids[0]].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[cur_ids[0]].Wcross[i][j]+
-													s->xi[tidx]*s->n->pops[cur_ids[0]].a[i]*s->n->pops[cur_ids[1]].a[j];
-								  }
-							        }
-							}while(shuffle_pops_ids(base_idx, s->n->nsize, pre_post_pair));
+									  for(int j=0; j<s->n->pops[pidx].size; j++){
+										s->n->pops[sol[si][0]].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[sol[si][0]].Wcross[i][j]+
+													s->xi[tidx]*s->n->pops[sol[si][0]].a[i]*s->n->pops[sol[si][1]].a[j];
+							  		}
+					        		}
+							}
 						break;
 						case COVARIANCE:
 							/* compute the mean value decay */
@@ -157,49 +169,19 @@ outdata* run_simulation(indata *in, simulation *s)
                                                                 }
 							}
 						/* cross-modal covariance learning rule */
-						do{
-                                                    /* shuffle the populations ids for updating */
-                                                    int* cur_ids = base_idx;
-						    printf("%d %d\n", cur_ids[0], cur_ids[1]);
-						    for(int i=0;i<s->n->pops[pidx].size;i++){
+							/* update the synaptic weights for cross-modal interaction */			
+						        for(int si =0;si<pre_post_pair*num_shuffles(s->n->nsize, pre_post_pair);si++){
+							    for(int i=0;i<s->n->pops[pidx].size;i++){
                                 	                        for(int j=0; j<s->n->pops[pidx].size; j++){
-							              s->n->pops[cur_ids[0]].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[cur_ids[0]].Wcross[i][j]+
+							              s->n->pops[sol[si][0]].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[sol[si][0]].Wcross[i][j]+
                                                                                                     s->xi[tidx]*
-												    (s->n->pops[cur_ids[0]].a[i] - avg_act[cur_ids[0]][i])*
-												    (s->n->pops[cur_ids[1]].a[j] - avg_act[cur_ids[1]][j]);
+												    (s->n->pops[sol[si][0]].a[i] - avg_act[sol[si][0]][i])*
+												    (s->n->pops[sol[si][1]].a[j] - avg_act[sol[si][1]][j]);
                         	                                }
-                	                                }
-						}while(shuffle_pops_ids(base_idx, s->n->nsize, pre_post_pair));
+                	                                    }
+						      }
 						break;
-						case OJA:
-						    /* compute the global synaptic strength in the likage */
-                                                do{     
-                                                    /* shuffle the populations ids for updating */
-                                                    int* cur_ids = base_idx;
-						    	printf("%d %d\n", cur_ids[0], cur_ids[1]);
-							for(int i=0;i<s->n->pops[pidx].size;i++){
-                                                                for(int j=0; j<s->n->pops[pidx].size; j++){
-                                                                        s->n->pops[cur_ids[0]].Wcross[i][j] = (1-s->xi[tidx])*s->n->pops[cur_ids[0]].Wcross[i][j]+
-                                                                                                        s->xi[tidx]*s->n->pops[cur_ids[0]].a[i]*s->n->pops[cur_ids[1]].a[j];
-									sum_wcross[cur_ids[0]] += s->n->pops[cur_ids[0]].Wcross[i][j];
-                                                                }
-                                                        }
-						}while(shuffle_pops_ids(base_idx, s->n->nsize, pre_post_pair));
-				
-						    /* compute the synaptic weights using Oja's local normalizing PCA rule */
-                                                do{
-                                                    /* shuffle the populations ids for updating */
-                                                    int* cur_ids = base_idx;
-							for(int i=0;i<s->n->pops[pidx].size;i++){
-                                                                for(int j=0; j<s->n->pops[pidx].size; j++){
-                                                                        s->n->pops[cur_ids[0]].Wcross[i][j] = ((1-s->xi[tidx])*s->n->pops[cur_ids[0]].Wcross[i][j]+
-                                                                                                        s->xi[tidx]*s->n->pops[cur_ids[0]].a[i]*s->n->pops[cur_ids[1]].a[j])/
-			                                                                        	sqrt(sum_wcross[cur_ids[0]]);
-                                                                }
-                                                        }
-						}while(shuffle_pops_ids(base_idx, s->n->nsize, pre_post_pair));
-						break;
-					}/* and learning rule selector */
+					}/* end learning rule selector */
 			}/* end dataset loop for cross-modal learning */
 	}/* end cross-modal learning process */
 	/* normalize cross-modal synaptic weights for visualization */
@@ -353,6 +335,17 @@ double* parametrize_process(double v0, double vf, int t0, int tf, short type)
 	return out;
 }
 
+/* number of shuffles for maps ids for cross-modal circular permutation in Hebbian learning rule */
+long num_shuffles(int n, int r)
+{
+    long f[n + 1];
+    f[0]=1;
+    for (int i=1;i<=n;i++)
+        f[i]=i*f[i-1];
+    return f[n]/f[r]/f[n-r];
+}
+
+/* shuffle the maps ids for cross-modal circular permutation in Hebbian learning rule */
 unsigned int shuffle_pops_ids(unsigned int *ar, size_t n, unsigned int k)
 {
     unsigned int finished = 0;

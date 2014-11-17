@@ -67,9 +67,9 @@ for ppidx = 1:rdata.sim.indata.npop
     ax1_pos = get(hndl, 'Position'); set(hndl, 'XTick', []); set(hndl, 'XColor','w');
     ax2 = axes('Position',ax1_pos,'XAxisLocation','bottom','Color','none','LineWidth', 3);
     set(hndl, 'YTick', []); set(hndl, 'YColor','w');
-%     set(ax2, 'XTick', rdata.sim.net.pops(ppidx).Winput); set(ax2, 'XTickLabel', []);
-%     set(ax2, 'XLim', [ min(rdata.sim.net.pops(ppidx).Winput), max(rdata.sim.net.pops(ppidx).Winput)]);
-%     xlabel('neuron preferred values'); ylabel('learned tuning curves shapes');
+    set(ax2, 'XTick', rdata.sim.net.pops(ppidx).Winput); set(ax2, 'XTickLabel', []);
+    set(ax2, 'XLim', [ min(rdata.sim.net.pops(ppidx).Winput), max(rdata.sim.net.pops(ppidx).Winput)]);
+    xlabel('neuron preferred values'); ylabel('learned tuning curves shapes');
     % the density of the tuning curves (density function) - should increase
     % with the increase of the distribution of sensory data (directly proportional with the prior, p(s))
     % stimuli associated with the peaks of the tuning curves
