@@ -7,7 +7,7 @@ int main(int argc, char* argv[])
 	simulation *sim = init_simulation(MAX_EPOCHS, net);
 	outdata *runtime = run_simulation(indata, sim);
 	char* dump_file = dump_runtime_data_extended(runtime);
-	printf("CORR_LEARN_NET: Runtime data dumped on disk in: %s\n", dumnp_file);
+	printf("CORR_LEARN_NET: Runtime data dumped on disk in: %s\n", dump_file);
 	deinit_simulation(sim);
 	return EXIT_SUCCESS;
 }

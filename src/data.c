@@ -17,7 +17,7 @@ indata* generate_input_data(int np, int psz, int l, int rtype)
 		id->data[i] = (double*)calloc(id->npop, sizeof(double));	
 
 	for(int i=0;i<id->len;i++)
-		rel_vars[i] = (double*)calloc(id->npop-1, sizeof(double));
+		rel_vars[i] = (double*)calloc(id->npop, sizeof(double));
 
 	/* HERE EMBED THE RELATIONS */
 	/* check how many variables we haev in the network */
@@ -27,7 +27,7 @@ indata* generate_input_data(int np, int psz, int l, int rtype)
 				for(int j = 0;j<id->npop;j++){
 					switch(rtype){
 						case LINEAR:	
-							rel_vars[i][j] = 3*RANGE*pow(base_var[i], 1);
+							rel_vars[i][j] = RANGE*pow(base_var[i], 1);
 						break;
 						case ORDER2:
 							rel_vars[i][j] = pow(base_var[i], 2);
@@ -46,8 +46,8 @@ indata* generate_input_data(int np, int psz, int l, int rtype)
 		    switch(rtype){
 			case COMPLEX:
 			for(int i = 0;i<id->len;i++){
-				rel_vars[i][0] = 3*RANGE*pow(base_var[i], 1);
-				rel_vars[i][1] = pow(base_var[i], 2); 
+				rel_vars[i][1] = RANGE*pow(base_var[i], 1);
+				rel_vars[i][2] = pow(base_var[i], 2); 
 			}
 		     }
 		break;
@@ -55,9 +55,9 @@ indata* generate_input_data(int np, int psz, int l, int rtype)
 		    switch(rtype){
 			case COMPLEX:
 			for(int i = 0;i<id->len;i++){
-				rel_vars[i][0] = 3*RANGE*pow(base_var[i], 1);
-				rel_vars[i][1] = pow(base_var[i], 3);
-				rel_vars[i][2] = pow(base_var[i], 2);
+				rel_vars[i][1] = RANGE*pow(base_var[i], 1);
+				rel_vars[i][2] = pow(base_var[i], 3);
+				rel_vars[i][3] = pow(base_var[i], 2);
 			}
 		    }	
 		break;

@@ -1,4 +1,4 @@
-% load the data from the file
+    % load the data from the file
 function visualize_runtime(filein)
 rdata = load_runtime_data(filein);
 close all;
@@ -38,11 +38,13 @@ for pidx = 1:rdata.sim.net.nsize
 end
 
 % plot input data
-figure;
-set(gcf, 'color', 'white');
 RANGE = 1;
-plot(rdata.sim.indata.data(:, 1), rdata.sim.indata.data(:, 2), '.k'); xlabel('samples');
-grid off; box off; title('Input relation');
+for vpidx =2:rdata.sim.net.nsize
+    figure; set(gcf, 'color', 'white');
+    plot(rdata.sim.indata.data(:, 1), rdata.sim.indata.data(:, vpidx), '.k'); xlabel('samples');
+    grid off; box off; title(sprintf('Input relation population 1 - population %d', vpidx));
+end
+% individual map analysis
 for ppidx = 1:rdata.sim.indata.npop
     figure;
     set(gcf, 'color', 'white');
