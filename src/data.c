@@ -61,6 +61,18 @@ indata* generate_input_data(int np, int psz, int l, int rtype)
 			}
 		    }	
 		break;
+		case 5:
+		     switch(rtype){
+			case COMPLEX:
+				for(int i = 0; i<id->len;i++){
+					rel_vars[i][1] = pow(base_var[i], 1);
+					rel_vars[i][2] = pow(rel_vars[i][1], 2);
+					rel_vars[i][3] = pow(base_var[i], 3);
+					rel_vars[i][4] = pow((rel_vars[i][1] - rel_vars[i][3]), 2);
+					
+				}
+		     }
+		break;
 	}
 
         for(int i = 0;i<id->len;i++){
