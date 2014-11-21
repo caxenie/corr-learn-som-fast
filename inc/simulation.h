@@ -4,7 +4,7 @@
 
 /* simulation constant parameters */
 #define MAX_EPOCHS      400
-#define N_POP           5
+#define N_POP           2
 #define POP_SIZE        100
 #define DATASET_LEN     1500
 #define ALPHAI 		0.1f

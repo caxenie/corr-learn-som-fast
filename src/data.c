@@ -38,6 +38,23 @@ indata* generate_input_data(int np, int psz, int l, int rtype)
 						case SINE:
 							rel_vars[i][j] = sin(3*RANGE*base_var[i]);
 						break;
+						case SQUARE:
+							for(int i = 0;i<id->len;i++){
+								if(i<=id->len/4)
+									base_var[i] = -RANGE;
+								if(i>id->len/4 && i<=id->len/2)
+									base_var[i] = RANGE;
+								if(i>id->len/2 && i<=2*id->len/3)
+									base_var[i] = -RANGE;
+								if(i>2*id->len/3)	
+									base_var[i] = RANGE;
+							}
+							double sum_base = 0.0f;
+							for(int i =0; i<id->len;i++){
+								sum_base += fabs(base_var[i]);
+								rel_vars[i][1] = sum_base;
+							}
+						break;
 					}	
 				}		
 			}
@@ -50,7 +67,6 @@ indata* generate_input_data(int np, int psz, int l, int rtype)
 				rel_vars[i][2] = pow(base_var[i], 2); 
 			}
 		     }
-		break;
 		case 4:
 		    switch(rtype){
 			case COMPLEX:

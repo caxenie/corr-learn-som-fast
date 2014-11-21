@@ -6,6 +6,26 @@ double randf()
 	return (double) rand () / (double) RAND_MAX;
 }
 
+/* Normal random variate vector generator, of mean m and std. dev. s */
+double* gauss_rand(int num_vals, double mean, double std_dev)
+{
+        double x1 = 0.0f, x2 = 0.0f, w = 0.0f, y1 = 0.0f;
+	double *out = (double*)calloc(num_vals, sizeof(double));
+	for(int vidx = 0; vidx < num_vals; vidx++){
+	        do
+        	{
+                	x1 = 2.0 * (double)rand()/RAND_MAX - 1.0;
+	                x2 = 2.0 * (double)rand()/RAND_MAX - 1.0;
+        	        w = x1 * x1 + x2 * x2;
+	        } while ( w >= 1.0 );
+	
+        	w = sqrt( (-2.0 * log( w ) ) / w );
+	        y1 = x1 * w;
+		out[vidx] = y1;
+	}
+        return out;
+}
+
 /* non-uniform random distribution generator */
 double * generate_rnd_vector(int type, int range, int numv, int dist)
 {	
@@ -38,9 +58,7 @@ double * generate_rnd_vector(int type, int range, int numv, int dist)
 					}	
 				break;
 				case GAUSS:
-					for(int i=0;i<numv; i++){
-                                                out[i] = randf()*(vmax/4);
-                                        }
+                                       out = gauss_rand(numv, 0.0, vmax/(numv/2));
 				break;
 				case CONVEX:
 					for(int li = 0;li<numv;li++){
