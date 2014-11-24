@@ -1,4 +1,5 @@
 #include "simulation.h"
+#define TESTS_ON 
 
 int main(int argc, char* argv[])
 {
@@ -8,6 +9,11 @@ int main(int argc, char* argv[])
 	outdata *runtime = run_simulation(indata, sim);
 	char* dump_file = dump_runtime_data_extended(runtime);
 	printf("CORR_LEARN_NET: Runtime data dumped on disk in: %s\n", dump_file);
+#ifdef TESTS_ON
+	outdata *test_runtime = test_inference(runtime);
+        char* dump_file_test_runtime = dump_runtime_data_extended(test_runtime);
+        printf("CORR_LEARN_NET_TESTS: Inference test runtime data dumped on disk in: %s\n", dump_file_test_runtime);
+#endif 
 	deinit_simulation(sim);
 	return EXIT_SUCCESS;
 }

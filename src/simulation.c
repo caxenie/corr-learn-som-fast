@@ -207,6 +207,97 @@ outdata* run_simulation(indata *in, simulation *s)
 	return runtime;
 }
 
+/* test network's capabilities to perform inference, 
+   given one modality compute the other given the learned correlation */
+outdata* test_inference(outdata* learning_runtime)
+{
+	double insample = 0.0f;
+	double tot_act = 0.0f;
+	double *cur_act = (double*)calloc(learning_runtime->sim->n->pops[0].size, sizeof(double));
+	double **avg_act = (double**)calloc(learning_runtime->sim->n->nsize, sizeof(double*));
+	for(int i=0; i<learning_runtime->sim->n->nsize; i++)
+		avg_act[i] = (double*)calloc(learning_runtime->sim->n->pops[0].size, sizeof(double));
+	double sum_spref_act = 0.0f;
+	double sum_act = 0.0f;
+	outdata* test_data = (outdata*)calloc(1, sizeof(outdata));
+
+        for(int didx = 0; didx < learning_runtime->in->len; didx++){
+   	    /* use the learned sensory elicited synaptic weights and compute activation for each population */
+	    /* infer from first population the value in the second */
+            	      int pidx = 0;
+                      tot_act = 0.0f;
+		      cur_act = (double*)calloc(learning_runtime->sim->n->pops[0].size, sizeof(double));
+		      sum_spref_act = 0.0f;
+		      sum_act = 0.0f;
+                      insample = learning_runtime->in->data[didx][pidx];
+                      /* loop through neurons in current population */
+                      for(int nidx = 0; nidx<learning_runtime->sim->n->pops[pidx].size;nidx++){
+                              /* compute sensory elicited activation */
+                              cur_act[nidx] = (1/(sqrt(2*M_PI)*learning_runtime->sim->n->pops[pidx].s[nidx]))*
+                                             exp(-pow((insample - learning_runtime->sim->n->pops[pidx].Winput[nidx]),2)/(2*pow(learning_runtime->sim->n->pops[pidx].s[nidx], 2)));
+                      }
+                      /* normalize the activity vector of the population */
+                      for(int snid = 0; snid<learning_runtime->sim->n->pops[pidx].size; snid++)
+                              tot_act += cur_act[snid];
+		      for(int snid = 0; snid<learning_runtime->sim->n->pops[pidx].size; snid++)
+	                      cur_act[snid] /= tot_act;
+		      /* update the activity for next iteration */
+                      for(int nidx = 0; nidx<learning_runtime->sim->n->pops[pidx].size;nidx++){
+                              learning_runtime->sim->n->pops[pidx].a[nidx] = (1-learning_runtime->sim->eta[learning_runtime->sim->tf_lrn_cross])*learning_runtime->sim->n->pops[pidx].a[nidx] + 
+									   learning_runtime->sim->eta[learning_runtime->sim->tf_lrn_cross]*cur_act[nidx];
+		     }
+		     /* compute the mapping from the input activity through the Hebbian matrix to infer the paired activity */
+		     for(int i=0;i<learning_runtime->sim->n->pops[pidx].size;i++){
+                        for(int j=0; j<learning_runtime->sim->n->pops[pidx].size; j++){
+			     learning_runtime->sim->n->pops[pidx+1].a[i] += learning_runtime->sim->n->pops[pidx+1].Wcross[i][j]*learning_runtime->sim->n->pops[pidx].a[j];
+			}
+		     } 
+
+		     /* decode the neural activity value back into the real-world scalar */
+		     
+		     /* we use the population vector decoder in a generalized form as the preferred values are representing the input data distribution */	
+		     /* we assume that the spacing between preferred values is inversely proportional with the prob dist of the input */
+		     /* NOT WORKING */
+		     /*
+		     for(int nidx = 0; nidx<learning_runtime->sim->n->pops[pidx].size;nidx++){
+				// we assume that ai ~ p(ai | si); ai = activity, si = stimulus value
+				sum_spref_act += (learning_runtime->sim->n->pops[pidx+1].Winput[nidx]*learning_runtime->sim->n->pops[pidx+1].a[nidx]);
+				sum_act       += learning_runtime->sim->n->pops[pidx+1].a[nidx];
+		     }
+		     learning_runtime->in->data[didx][pidx+1] = sum_spref_act / sum_act;
+		     */
+		     
+		     /* using the Bayesian Population Vector, Simoncelli et al. */
+		     for (int i = 0; i<learning_runtime->sim->n->pops[pidx].size; i++){
+				sum_spref_act += learning_runtime->sim->n->pops[pidx+1].Winput[i]*sum_act;
+			for(int j = 0; j < learning_runtime->sim->n->pops[pidx].size; j++){
+				sum_act += 1;
+			}
+		     }
+		
+	 }/* end for each sample in the dataset */
+	
+	 /* fill in the return struct */
+        test_data->in = learning_runtime->in;
+        test_data->sim = learning_runtime->sim;
+
+	return test_data;
+}
+
+/* test network's fault tolerance capabilities, 
+   given one strongly perturbed modality compute the correct value given 
+   the learned correlation and the other correct modality */
+outdata* test_fault_tolerance(outdata* learning_runtime)
+{
+	outdata* test_data = (outdata*)calloc(1, sizeof(outdata));
+
+	 /* fill in the return struct */
+        test_data->in = learning_runtime->in;
+        test_data->sim = learning_runtime->sim;
+
+	return test_data;
+}
+
 /* destroy the simulation */
 void deinit_simulation(simulation* s)
 {

@@ -68,3 +68,13 @@ double* parametrize_process(double v0, double vf, int t0, int tf, short type);
 long num_shuffles(int n, int r);
 /* shuffle the maps ids for cross-modal circular permutation in Hebbian learning rule */
 unsigned int shuffle_pops_ids(unsigned int *ar, size_t n, unsigned int k);
+
+/* network testing routines */ 
+
+/* test network's capabilities to perform inference, 
+   given one modality compute the other given the learned correlation */
+outdata* test_inference(outdata* learning_runtime);
+/* test network's fault tolerance capabilities, 
+   given one strongly perturbed modality compute the correct value given 
+   the learned correlation and the other correct modality */
+outdata* test_fault_tolerance(outdata* learning_runtime);
