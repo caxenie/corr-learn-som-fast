@@ -219,6 +219,7 @@ outdata* test_inference(outdata* learning_runtime)
 		avg_act[i] = (double*)calloc(learning_runtime->sim->n->pops[0].size, sizeof(double));
 	double sum_spref_act = 0.0f;
 	double sum_act = 0.0f;
+	double sum_conv = 0.0f;
 	outdata* test_data = (outdata*)calloc(1, sizeof(outdata));
 
         for(int didx = 0; didx < learning_runtime->in->len; didx++){
@@ -267,14 +268,24 @@ outdata* test_inference(outdata* learning_runtime)
 		     learning_runtime->in->data[didx][pidx+1] = sum_spref_act / sum_act;
 		     */
 		     
-		     /* using the Bayesian Population Vector, Simoncelli et al. */
+		     /* using the Bayesian Population Vector */
+		     double tc_ovlp = 0.0f;
+		     double baseline = 0.5f;
 		     for (int i = 0; i<learning_runtime->sim->n->pops[pidx].size; i++){
-				sum_spref_act += learning_runtime->sim->n->pops[pidx+1].Winput[i]*sum_act;
+			sum_conv = 0.0f;
 			for(int j = 0; j < learning_runtime->sim->n->pops[pidx].size; j++){
-				sum_act += 1;
+				/* compute the contribution of the linear filter */
+				tc_ovlp = (1/(sqrt(2*M_PI*(pow(learning_runtime->sim->n->pops[pidx+1].s[j],2)+pow(learning_runtime->sim->n->pops[pidx+1].s[i],2)))))*
+                                                           exp(-pow((learning_runtime->sim->n->pops[pidx+1].Winput[j] - learning_runtime->sim->n->pops[pidx+1].Winput[i]),2)/
+							   (2*(pow(learning_runtime->sim->n->pops[pidx+1].s[j],2)+pow(learning_runtime->sim->n->pops[pidx+1].s[i],2)))) + baseline;
+				sum_conv += learning_runtime->sim->n->pops[pidx+1].a[j]*log(tc_ovlp);
 			}
+			sum_act += exp(sum_conv);
+			sum_spref_act += learning_runtime->sim->n->pops[pidx+1].Winput[i]*exp(sum_conv);
 		     }
-		
+		    /* recover the value */
+		    learning_runtime->in->data[didx][pidx+1] = sum_spref_act / sum_act; 
+
 	 }/* end for each sample in the dataset */
 	
 	 /* fill in the return struct */
