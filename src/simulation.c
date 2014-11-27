@@ -254,6 +254,24 @@ outdata* test_inference(outdata* learning_runtime)
 			}
 		     } 
 
+		     double max_neuron = 0;
+		     int max_idx = 0;
+		     for(int i=0; i<learning_runtime->sim->n->pops[pidx+1].size;i++){
+				if(learning_runtime->sim->n->pops[pidx+1].a[i]>max_neuron){
+					max_neuron = learning_runtime->sim->n->pops[pidx+1].a[i];
+					max_idx = i;
+				}
+		    }
+		    
+		    double x_n = 0.0;
+		    double discr_factor = sqrt(-2*pow(learning_runtime->sim->n->pops[pidx+1].s[max_idx], 2) * log(max_neuron*sqrt(2*M_PI*learning_runtime->sim->n->pops[pidx+1].s[max_idx])));
+		    if(max_idx>learning_runtime->sim->n->pops[pidx+1].size/2)
+				x_n = learning_runtime->sim->n->pops[pidx+1].Winput[max_idx] + discr_factor;
+		    else
+				x_n = learning_runtime->sim->n->pops[pidx+1].Winput[max_idx] - discr_factor;
+
+		
+		    learning_runtime->in->data[didx][pidx+1] = x_n;
 		     /* decode the neural activity value back into the real-world scalar */
 		     
 		     /* we use the population vector decoder in a generalized form as the preferred values are representing the input data distribution */	
@@ -269,6 +287,7 @@ outdata* test_inference(outdata* learning_runtime)
 		     */
 		     
 		     /* using the Bayesian Population Vector */
+#if 0
 		     double tc_ovlp = 0.0f;
 		     double baseline = 0.5f;
 		     for (int i = 0; i<learning_runtime->sim->n->pops[pidx].size; i++){
@@ -285,7 +304,8 @@ outdata* test_inference(outdata* learning_runtime)
 		     }
 		    /* recover the value */
 		    learning_runtime->in->data[didx][pidx+1] = sum_spref_act / sum_act; 
-
+#endif 
+		    
 	 }/* end for each sample in the dataset */
 	
 	 /* fill in the return struct */
