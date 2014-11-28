@@ -14,8 +14,9 @@
 #define XI    		0.001f
 #define WRAP_POP 	0
 #define ASYMM_FUNC 	0
+#define TESTS_ON	
 
-/* adaptive processes parametruization types */
+/* adaptive processes parametrization types */
 enum{
 	SIGMOID = 0, 
 	INVTIME,
@@ -26,6 +27,13 @@ enum{
 enum{
 	HEBB = 0, 
 	COVARIANCE,
+};
+
+/* data dump type */
+enum{
+	BASIC = 0, 
+	TESTS, 
+	EXT_TESTS,
 };
 
 #define LEARNING_RULE COVARIANCE
@@ -59,7 +67,7 @@ outdata* run_simulation(indata *in, simulation *s);
 /* dump the runtime data to file on disk */
 char* dump_runtime_data(outdata *od);
 /* dump the runtime data to file on disk - explicit sequential write */
-char* dump_runtime_data_extended(outdata *od);
+char* dump_runtime_data_extended(outdata *od, int format);
 
 
 /* parametrize adaptive parameters */

@@ -220,94 +220,68 @@ outdata* test_inference(outdata* learning_runtime)
 	double sum_spref_act = 0.0f;
 	double sum_act = 0.0f;
 	double sum_conv = 0.0f;
+	int pre_pop = 0;
+	int post_pop = 1;
+	/* reinit activations for new test scenario */
 	outdata* test_data = (outdata*)calloc(1, sizeof(outdata));
 
         for(int didx = 0; didx < learning_runtime->in->len; didx++){
    	    /* use the learned sensory elicited synaptic weights and compute activation for each population */
 	    /* infer from first population the value in the second */
-            	      int pidx = 0;
-                      tot_act = 0.0f;
-		      cur_act = (double*)calloc(learning_runtime->sim->n->pops[0].size, sizeof(double));
+        	      learning_runtime->sim->n->pops[pre_pop].a = (double*)calloc(learning_runtime->sim->n->pops[pre_pop].size, sizeof(double));
+		      learning_runtime->sim->n->pops[post_pop].a = (double*)calloc(learning_runtime->sim->n->pops[post_pop].size, sizeof(double));
+        	      tot_act = 0.0f;
+		      cur_act = (double*)calloc(learning_runtime->sim->n->pops[pre_pop].size, sizeof(double));
 		      sum_spref_act = 0.0f;
 		      sum_act = 0.0f;
-                      insample = learning_runtime->in->data[didx][pidx];
+                      insample = learning_runtime->in->data[didx][pre_pop];
                       /* loop through neurons in current population */
-                      for(int nidx = 0; nidx<learning_runtime->sim->n->pops[pidx].size;nidx++){
+                      for(int nidx = 0; nidx<learning_runtime->sim->n->pops[pre_pop].size;nidx++){
                               /* compute sensory elicited activation */
-                              cur_act[nidx] = (1/(sqrt(2*M_PI)*learning_runtime->sim->n->pops[pidx].s[nidx]))*
-                                             exp(-pow((insample - learning_runtime->sim->n->pops[pidx].Winput[nidx]),2)/(2*pow(learning_runtime->sim->n->pops[pidx].s[nidx], 2)));
+                              cur_act[nidx] = (1/(sqrt(2*M_PI)*learning_runtime->sim->n->pops[pre_pop].s[nidx]))*
+                                             exp(-pow((insample - learning_runtime->sim->n->pops[pre_pop].Winput[nidx]),2)/(2*pow(learning_runtime->sim->n->pops[pre_pop].s[nidx], 2)));
                       }
                       /* normalize the activity vector of the population */
-                      for(int snid = 0; snid<learning_runtime->sim->n->pops[pidx].size; snid++)
+                      for(int snid = 0; snid<learning_runtime->sim->n->pops[pre_pop].size; snid++)
                               tot_act += cur_act[snid];
-		      for(int snid = 0; snid<learning_runtime->sim->n->pops[pidx].size; snid++)
+		      for(int snid = 0; snid<learning_runtime->sim->n->pops[pre_pop].size; snid++)
 	                      cur_act[snid] /= tot_act;
 		      /* update the activity for next iteration */
-                      for(int nidx = 0; nidx<learning_runtime->sim->n->pops[pidx].size;nidx++){
-                              learning_runtime->sim->n->pops[pidx].a[nidx] = (1-learning_runtime->sim->eta[learning_runtime->sim->tf_lrn_cross])*learning_runtime->sim->n->pops[pidx].a[nidx] + 
-									   learning_runtime->sim->eta[learning_runtime->sim->tf_lrn_cross]*cur_act[nidx];
+                      for(int nidx = 0; nidx<learning_runtime->sim->n->pops[pre_pop].size;nidx++){
+                              learning_runtime->sim->n->pops[pre_pop].a[nidx] = (1-learning_runtime->sim->eta[learning_runtime->sim->tf_lrn_cross-1])*learning_runtime->sim->n->pops[pre_pop].a[nidx] + 
+									   learning_runtime->sim->eta[learning_runtime->sim->tf_lrn_cross-1]*cur_act[nidx];
 		     }
+
 		     /* compute the mapping from the input activity through the Hebbian matrix to infer the paired activity */
-		     for(int i=0;i<learning_runtime->sim->n->pops[pidx].size;i++){
-                        for(int j=0; j<learning_runtime->sim->n->pops[pidx].size; j++){
-			     learning_runtime->sim->n->pops[pidx+1].a[i] += learning_runtime->sim->n->pops[pidx+1].Wcross[i][j]*learning_runtime->sim->n->pops[pidx].a[j];
+		    for(int i=0;i<learning_runtime->sim->n->pops[post_pop].size;i++){
+                        for(int j=0; j<learning_runtime->sim->n->pops[post_pop].size; j++){
+			     learning_runtime->sim->n->pops[post_pop].a[i] += learning_runtime->sim->n->pops[post_pop].Wcross[i][j]*learning_runtime->sim->n->pops[pre_pop].a[j];
 			}
 		     } 
-
-		     double max_neuron = 0;
-		     int max_idx = 0;
-		     for(int i=0; i<learning_runtime->sim->n->pops[pidx+1].size;i++){
-				if(learning_runtime->sim->n->pops[pidx+1].a[i]>max_neuron){
-					max_neuron = learning_runtime->sim->n->pops[pidx+1].a[i];
-					max_idx = i;
+	
+		     /* find max activation */
+		     double max_post_act = 0;
+		     int max_act_idx = 0;
+		     for(int i=0; i<learning_runtime->sim->n->pops[post_pop].size;i++){
+				if(learning_runtime->sim->n->pops[post_pop].a[i]>max_post_act){
+					max_post_act = learning_runtime->sim->n->pops[post_pop].a[i];
+					max_act_idx = i;
 				}
 		    }
-		    
+		   
+                    /* analytically extract the scalar value from the activity profile */
 		    double x_n = 0.0;
-		    double discr_factor = sqrt(-2*pow(learning_runtime->sim->n->pops[pidx+1].s[max_idx], 2) * log(max_neuron*sqrt(2*M_PI*learning_runtime->sim->n->pops[pidx+1].s[max_idx])));
-		    if(max_idx>learning_runtime->sim->n->pops[pidx+1].size/2)
-				x_n = learning_runtime->sim->n->pops[pidx+1].Winput[max_idx] + discr_factor;
+		    double discr_factor = sqrt(-2*pow(learning_runtime->sim->n->pops[post_pop].s[max_act_idx], 2) * 
+					      log(max_post_act*sqrt(2*M_PI*learning_runtime->sim->n->pops[post_pop].s[max_act_idx])));
+		    if(max_act_idx>learning_runtime->sim->n->pops[post_pop].size/2)
+				x_n = learning_runtime->sim->n->pops[post_pop].Winput[max_act_idx] + discr_factor;
 		    else
-				x_n = learning_runtime->sim->n->pops[pidx+1].Winput[max_idx] - discr_factor;
+				x_n = learning_runtime->sim->n->pops[post_pop].Winput[max_act_idx] - discr_factor;
 
-		
-		    learning_runtime->in->data[didx][pidx+1] = x_n;
-		     /* decode the neural activity value back into the real-world scalar */
-		     
-		     /* we use the population vector decoder in a generalized form as the preferred values are representing the input data distribution */	
-		     /* we assume that the spacing between preferred values is inversely proportional with the prob dist of the input */
-		     /* NOT WORKING */
-		     /*
-		     for(int nidx = 0; nidx<learning_runtime->sim->n->pops[pidx].size;nidx++){
-				// we assume that ai ~ p(ai | si); ai = activity, si = stimulus value
-				sum_spref_act += (learning_runtime->sim->n->pops[pidx+1].Winput[nidx]*learning_runtime->sim->n->pops[pidx+1].a[nidx]);
-				sum_act       += learning_runtime->sim->n->pops[pidx+1].a[nidx];
-		     }
-		     learning_runtime->in->data[didx][pidx+1] = sum_spref_act / sum_act;
-		     */
-		     
-		     /* using the Bayesian Population Vector */
-#if 0
-		     double tc_ovlp = 0.0f;
-		     double baseline = 0.5f;
-		     for (int i = 0; i<learning_runtime->sim->n->pops[pidx].size; i++){
-			sum_conv = 0.0f;
-			for(int j = 0; j < learning_runtime->sim->n->pops[pidx].size; j++){
-				/* compute the contribution of the linear filter */
-				tc_ovlp = (1/(sqrt(2*M_PI*(pow(learning_runtime->sim->n->pops[pidx+1].s[j],2)+pow(learning_runtime->sim->n->pops[pidx+1].s[i],2)))))*
-                                                           exp(-pow((learning_runtime->sim->n->pops[pidx+1].Winput[j] - learning_runtime->sim->n->pops[pidx+1].Winput[i]),2)/
-							   (2*(pow(learning_runtime->sim->n->pops[pidx+1].s[j],2)+pow(learning_runtime->sim->n->pops[pidx+1].s[i],2)))) + baseline;
-				sum_conv += learning_runtime->sim->n->pops[pidx+1].a[j]*log(tc_ovlp);
-			}
-			sum_act += exp(sum_conv);
-			sum_spref_act += learning_runtime->sim->n->pops[pidx+1].Winput[i]*exp(sum_conv);
-		     }
-		    /* recover the value */
-		    learning_runtime->in->data[didx][pidx+1] = sum_spref_act / sum_act; 
-#endif 
-		    
+		   /* recover the value */
+		   learning_runtime->in->data[didx][post_pop] = x_n;
+	    
 	 }/* end for each sample in the dataset */
-	
 	 /* fill in the return struct */
         test_data->in = learning_runtime->in;
         test_data->sim = learning_runtime->sim;
@@ -366,17 +340,27 @@ char* dump_runtime_data(outdata *od)
 }
 
 /* dump the runtime data to file on disk - explicit sequential write */
-char* dump_runtime_data_extended(outdata *od)
+char* dump_runtime_data_extended(outdata *od, int format)
 {
 	time_t rawt; time(&rawt);
         struct tm* tinfo = localtime(&rawt);
         FILE* fout;
         char* nfout = (char*)calloc(400, sizeof(char));
         char simparams[200];
-
+	
         strftime(nfout, 150, "%Y-%m-%d__%H:%M:%S", tinfo);
-        strcat(nfout, "_cln_extended_runtime_data_");
-        sprintf(simparams, "%d_epochs_%d_populations_%d_neurons",
+	switch(format){
+		case TESTS:
+			strcat(nfout, "_cln_extended_runtime_data_tests_");
+		break;
+		case EXT_TESTS:
+			strcat(nfout, "_cln_extended_runtime_data_extended_tests_");
+		break;
+		case BASIC:
+			strcat(nfout, "_cln_extended_runtime_data_");
+		break;
+	}
+	sprintf(simparams, "%d_epochs_%d_populations_%d_neurons",
                            od->sim->max_epochs,
                            od->sim->n->nsize,
                            od->sim->n->pops[od->sim->n->nsize-1].size);
