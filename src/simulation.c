@@ -226,7 +226,7 @@ outdata* test_inference(outdata* learning_runtime)
 	outdata* test_data = (outdata*)calloc(1, sizeof(outdata));
 
         for(int didx = 0; didx < learning_runtime->in->len; didx++){
-   	    /* use the learned sensory elicited synaptic weights and compute activation for each population */
+   	    /* use the learned sensory elicited synaptic weights and compute activation for first population */
 	    /* infer from first population the value in the second */
         	      learning_runtime->sim->n->pops[pre_pop].a = (double*)calloc(learning_runtime->sim->n->pops[pre_pop].size, sizeof(double));
 		      learning_runtime->sim->n->pops[post_pop].a = (double*)calloc(learning_runtime->sim->n->pops[post_pop].size, sizeof(double));
@@ -251,7 +251,30 @@ outdata* test_inference(outdata* learning_runtime)
                               learning_runtime->sim->n->pops[pre_pop].a[nidx] = (1-learning_runtime->sim->eta[learning_runtime->sim->tf_lrn_cross-1])*learning_runtime->sim->n->pops[pre_pop].a[nidx] + 
 									   learning_runtime->sim->eta[learning_runtime->sim->tf_lrn_cross-1]*cur_act[nidx];
 		     }
+#if 0
+		     /* extract only the most strong Hebbian links in the weight matrix */
+		     double max_corr_w = 0.0f;
+		     double *max_corr_pos = (double*)calloc(learning_runtime->sim->n->pops[pre_pop].size, sizeof(double));
+		     double **max_corr_matrix = (double**)calloc(learning_runtime->sim->n->pops[pre_pop].size, sizeof(double*));
+		     for(int i=0;i<learning_runtime->sim->n->pops[pre_pop].size; i++)
+				max_corr_matrix[i] = (double*)calloc(learning_runtime->sim->n->pops[post_pop].size, sizeof(double));
 
+		     for(int i=0; i<learning_runtime->sim->n->pops[pre_pop].size; i++){
+			for(int j=0;j<learning_runtime->sim->n->pops[post_pop].size; j++){
+				if(learning_runtime->sim->n->pops[post_pop].Wcross[i][j] > max_corr_w)
+					max_corr_w = learning_runtime->sim->n->pops[post_pop].Wcross[i][j];
+					max_corr_pos[i] = j;
+			}
+		     }
+	             for(int i=0; i<learning_runtime->sim->n->pops[pre_pop].size; i++){
+                        for(int j=0;j<learning_runtime->sim->n->pops[post_pop].size; j++){  
+				if(j==max_corr_pos[i])
+					max_corr_matrix[i][j] = 1.0f;
+				else
+					max_corr_matrix[i][j] = 0.0f;
+			}
+		     }
+#endif 
 		     /* compute the mapping from the input activity through the Hebbian matrix to infer the paired activity */
 		    for(int i=0;i<learning_runtime->sim->n->pops[post_pop].size;i++){
                         for(int j=0; j<learning_runtime->sim->n->pops[post_pop].size; j++){
@@ -259,7 +282,7 @@ outdata* test_inference(outdata* learning_runtime)
 			}
 		     } 
 	
-		     /* find max activation */
+		     /* find max activation in the mapped activation */
 		     double max_post_act = 0;
 		     int max_act_idx = 0;
 		     for(int i=0; i<learning_runtime->sim->n->pops[post_pop].size;i++){
@@ -272,7 +295,7 @@ outdata* test_inference(outdata* learning_runtime)
                     /* analytically extract the scalar value from the activity profile */
 		    double x_n = 0.0;
 		    double discr_factor = sqrt(-2*pow(learning_runtime->sim->n->pops[post_pop].s[max_act_idx], 2) * 
-					      log(max_post_act*sqrt(2*M_PI*learning_runtime->sim->n->pops[post_pop].s[max_act_idx])));
+					      log(max_post_act*sqrt(2*M_PI)*learning_runtime->sim->n->pops[post_pop].s[max_act_idx]));
 		    if(max_act_idx>learning_runtime->sim->n->pops[post_pop].size/2)
 				x_n = learning_runtime->sim->n->pops[post_pop].Winput[max_act_idx] + discr_factor;
 		    else
