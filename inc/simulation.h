@@ -69,14 +69,6 @@ char* dump_runtime_data(outdata *od);
 /* dump the runtime data to file on disk - explicit sequential write */
 char* dump_runtime_data_extended(outdata *od, int format);
 
-
-/* parametrize adaptive parameters */
-double* parametrize_process(double v0, double vf, int t0, int tf, short type);
-/* number of shuffles for maps ids for cross-modal circular permutation in Hebbian learning rule */
-long num_shuffles(int n, int r);
-/* shuffle the maps ids for cross-modal circular permutation in Hebbian learning rule */
-unsigned int shuffle_pops_ids(unsigned int *ar, size_t n, unsigned int k);
-
 /* network testing routines */ 
 
 /* test network's capabilities to perform inference, 

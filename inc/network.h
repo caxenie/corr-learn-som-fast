@@ -33,7 +33,14 @@ population init_population(short idx, int psize);
 /* initialize the network */
 network* init_network(int npop, int psize);
 /* deallocate a neural population */
-void deinit_populaion(population *pop);
+void deinit_population(population *pop);
 /* deallocate a network */
 void deinit_network(network *net);
-
+/* parametrize adaptive parameters */
+double* parametrize_process(double v0, double vf, int t0, int tf, short type);
+/* number of shuffles for maps ids for cross-modal circular permutation in Hebbian learning rule */
+long num_shuffles(int n, int r);
+/* shuffle the maps ids for cross-modal circular permutation in Hebbian learning rule */
+unsigned int shuffle_pops_ids(unsigned int *ar, size_t n, unsigned int k);
+/* decode population to real-world value */
+double decode_population(network*n, int pre_id, int post_id,  double init_cond);

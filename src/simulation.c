@@ -1,3 +1,4 @@
+
 #include "simulation.h"
 
 /* initialize simulation */
@@ -241,7 +242,7 @@ outdata* test_inference(outdata* learning_runtime)
                               cur_act[nidx] = (1/(sqrt(2*M_PI)*learning_runtime->sim->n->pops[pre_pop].s[nidx]))*
                                              exp(-pow((insample - learning_runtime->sim->n->pops[pre_pop].Winput[nidx]),2)/(2*pow(learning_runtime->sim->n->pops[pre_pop].s[nidx], 2)));
                       }
-                      /* normalize the activity vector of the population */
+                      /* normalize the activity vectoir of the population */
                       for(int snid = 0; snid<learning_runtime->sim->n->pops[pre_pop].size; snid++)
                               tot_act += cur_act[snid];
 		      for(int snid = 0; snid<learning_runtime->sim->n->pops[pre_pop].size; snid++)
@@ -251,30 +252,6 @@ outdata* test_inference(outdata* learning_runtime)
                               learning_runtime->sim->n->pops[pre_pop].a[nidx] = (1-learning_runtime->sim->eta[learning_runtime->sim->tf_lrn_cross-1])*learning_runtime->sim->n->pops[pre_pop].a[nidx] + 
 									   learning_runtime->sim->eta[learning_runtime->sim->tf_lrn_cross-1]*cur_act[nidx];
 		     }
-#if 0
-		     /* extract only the most strong Hebbian links in the weight matrix */
-		     double max_corr_w = 0.0f;
-		     double *max_corr_pos = (double*)calloc(learning_runtime->sim->n->pops[pre_pop].size, sizeof(double));
-		     double **max_corr_matrix = (double**)calloc(learning_runtime->sim->n->pops[pre_pop].size, sizeof(double*));
-		     for(int i=0;i<learning_runtime->sim->n->pops[pre_pop].size; i++)
-				max_corr_matrix[i] = (double*)calloc(learning_runtime->sim->n->pops[post_pop].size, sizeof(double));
-
-		     for(int i=0; i<learning_runtime->sim->n->pops[pre_pop].size; i++){
-			for(int j=0;j<learning_runtime->sim->n->pops[post_pop].size; j++){
-				if(learning_runtime->sim->n->pops[post_pop].Wcross[i][j] > max_corr_w)
-					max_corr_w = learning_runtime->sim->n->pops[post_pop].Wcross[i][j];
-					max_corr_pos[i] = j;
-			}
-		     }
-	             for(int i=0; i<learning_runtime->sim->n->pops[pre_pop].size; i++){
-                        for(int j=0;j<learning_runtime->sim->n->pops[post_pop].size; j++){  
-				if(j==max_corr_pos[i])
-					max_corr_matrix[i][j] = 1.0f;
-				else
-					max_corr_matrix[i][j] = 0.0f;
-			}
-		     }
-#endif 
 		     /* compute the mapping from the input activity through the Hebbian matrix to infer the paired activity */
 		    for(int i=0;i<learning_runtime->sim->n->pops[post_pop].size;i++){
                         for(int j=0; j<learning_runtime->sim->n->pops[post_pop].size; j++){
@@ -301,8 +278,11 @@ outdata* test_inference(outdata* learning_runtime)
 		    else
 				x_n = learning_runtime->sim->n->pops[post_pop].Winput[max_act_idx] - discr_factor;
 
-		   /* recover the value */
-		   learning_runtime->in->data[didx][post_pop] = x_n;
+		   /* recover the value --> decoding using naive approach */
+		   //learning_runtime->in->data[didx][post_pop] = x_n;
+		
+		   /* recover the value --> decoding using optimizer */
+		   learning_runtime->in->data[didx][post_pop] = decode_population(learning_runtime->sim->n, pre_pop, post_pop, x_n);
 	    
 	 }/* end for each sample in the dataset */
 	 /* fill in the return struct */
@@ -433,78 +413,4 @@ char* dump_runtime_data_extended(outdata *od, int format)
         fclose(fout);
         return nfout;
 }
-
-/* parametrize adaptive parameters */
-double* parametrize_process(double v0, double vf, int t0, int tf, short type)
-{
-	int len = tf-t0;
-	double* out = (double*)calloc(len, sizeof(double));
-	double s = 0.0f, p = 0.0f, A = 0.0f, B = 0.0f;
-		
-	switch(type){
-		case SIGMOID:
-			s = -floor(log10(tf))*pow(10, (-(floor(log10(tf)))));		
-			p = abs(s*pow(10, (floor(log10(tf))+ floor(log10(tf)/2))));
-			for(int i = 0;i<len;i++)
-				out[i] = v0 - v0/(1+exp(s*(i-(tf/p)))) + vf;				
-		break;
-		case INVTIME:
-			B = (vf*tf - v0*t0)/(v0-vf);
-			A = v0*t0 + B*v0;
-			for (int i=0;i<len;i++)
-				out[i] = A/(i+B);
-		break;
-		case EXP:
-			if(v0<1) p = -log(v0);
-			else p = log(v0);
-			for(int i=0;i<len;i++)
-				out[i] = v0*exp(-i/(tf/p));
-		break;
-	}
-	return out;
-}
-
-/* number of shuffles for maps ids for cross-modal circular permutation in Hebbian learning rule */
-long num_shuffles(int n, int r)
-{
-    long f[n + 1];
-    f[0]=1;
-    for (int i=1;i<=n;i++)
-        f[i]=i*f[i-1];
-    return f[n]/f[r]/f[n-r];
-}
-
-/* shuffle the maps ids for cross-modal circular permutation in Hebbian learning rule */
-unsigned int shuffle_pops_ids(unsigned int *ar, size_t n, unsigned int k)
-{
-    unsigned int finished = 0;
-    unsigned int changed = 0;
-    unsigned int i;
-
-    if (k > 0) {
-        for (i = k - 1; !finished && !changed; i--) {
-            if (ar[i] < (n - 1) - (k - 1) + i) {
-                /* Increment this element */
-                ar[i]++;
-                if (i < k - 1) {
-                    /* Turn the elements after it into a linear sequence */
-                    unsigned int j;
-                    for (j = i + 1; j < k; j++) {
-                        ar[j] = ar[j - 1] + 1;
-                    }
-                }
-                changed = 1;
-            }
-            finished = i == 0;
-        }
-        if (!changed) {
-            /* Reset to first combination */
-            for (i = 0; i < k; i++) {
-                ar[i] = i;
-            }
-        }
-    }
-    return changed;
-}
-
 
