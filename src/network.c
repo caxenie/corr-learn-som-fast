@@ -146,40 +146,55 @@ unsigned int shuffle_pops_ids(unsigned int *ar, size_t n, unsigned int k)
 double decode_population(network*n, int pre_id, int post_id, double init_cond)
 {
 	double dec_val = init_cond;
-	int num_iters_opt = 200;
-	double precision = 1e-5;
-	double fx = 0.0f, temp_fx = 0.0f;
+	int num_iters_opt = 2000;
+	double precision = 1e-6;
+	double fx = 0.0f, temp_fx = 0.0f, fx_ant = 0.0f;
 	double dfx = 0.0f;
 	double* dir_act = (double*)calloc(n->pops[post_id].size, sizeof(double));
-	double* ind_act = (double*)calloc(n->pops[post_id].size, sizeof(double));	
-	
+	double* ind_act = n->pops[post_id].a;
+	double tot_act = 0.0f;
+	double* cur_act = (double*)calloc(n->pops[post_id].size, sizeof(double));
+
+	printf("ai\n");
+	for(int v = 0; v< n->pops[post_id].size; v++){	
+			printf(" %lf  \n", ind_act[v]);
+		}
+
 	/* use Newton-Raphson optimization to find precise decoded value */
 	for(int opt_iter = 0; opt_iter < num_iters_opt; opt_iter++){
 		/* compute direct activation given the optimized variable */
 		for(int i=0; i<n->pops[post_id].size; i++){
-				dir_act[i] = (1/(sqrt(2*M_PI)*n->pops[post_id].s[i]))*
+				cur_act[i] = (1/(sqrt(2*M_PI)*n->pops[post_id].s[i]))*
                                              exp(-pow((dec_val - n->pops[post_id].Winput[i]),2)/
 					     (2*pow(n->pops[post_id].s[i], 2)));
 				
+		} 
+		/* normalization routine in the optimization process */
+		for(int snid = 0; snid<n->pops[post_id].size; snid++)
+                              tot_act += cur_act[snid];
+                for(int snid = 0; snid<n->pops[post_id].size; snid++)
+                              cur_act[snid] /= tot_act;
+                /* update the activity for next iteration */
+		dir_act = cur_act;
+		
+		printf("ai | ad\n");
+		for(int v = 0; v< n->pops[post_id].size; v++){	
+			printf(" %lf  | % lf \n", ind_act[v], dir_act[v]);
 		}
-		/* compute the indirect activation as inferred from the presynaptic activation */
-		for(int i=0;i<n->pops[post_id].size;i++){
-                        for(int j=0; j<n->pops[post_id].size; j++){
-                             n->pops[post_id].a[i] += n->pops[post_id].Wcross[i][j]*n->pops[pre_id].a[j];
-                        }
-                }
-		ind_act = n->pops[post_id].a;
-		/* function to optimize is the error between the direct and indirect activation */
-		for(int i=0;i<n->pops[post_id].size;i++){
-				temp_fx += pow(ind_act[i]-dir_act[i], 2);
-		}
+   	    	/* function to optimize is the error between the direct and indirect activation */
+		for(int i=0;i<n->pops[post_id].size;i++)
+			temp_fx += pow(ind_act[i] - dir_act[i], 2);
 		fx = sqrt(temp_fx);
-		/* ... and its deirivative */
-		dfx = 1/(2*sqrt(temp_fx));
+		/* ... and its derivative computed numerically */
+		dfx = (fx - fx_ant)/2;
 		/* update the estimate of the value */
 		dec_val -= (fx/dfx);
 		/* check convergence */
-		if(fabs(fx/dfx) < precision) break;
+		if(fabs(fx/dfx) < precision){ printf("precision reached\n"); break;}
+		/* update history */
+		fx_ant = fx;
+		temp_fx = 0.0f;
+		tot_act = 0.0f;
 	}
 	return dec_val;
 }
