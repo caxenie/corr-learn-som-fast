@@ -213,18 +213,26 @@ outdata* run_simulation(indata *in, simulation *s)
 outdata* test_inference(outdata* learning_runtime)
 {
 	double insample = 0.0f;
+	int pre_pop = 0;
+	int post_pop = 1;
 	double tot_act = 0.0f;
-	double *cur_act = (double*)calloc(learning_runtime->sim->n->pops[0].size, sizeof(double));
+	double *cur_act = (double*)calloc(learning_runtime->sim->n->pops[pre_pop].size, sizeof(double));
 	double **avg_act = (double**)calloc(learning_runtime->sim->n->nsize, sizeof(double*));
 	for(int i=0; i<learning_runtime->sim->n->nsize; i++)
-		avg_act[i] = (double*)calloc(learning_runtime->sim->n->pops[0].size, sizeof(double));
+		avg_act[i] = (double*)calloc(learning_runtime->sim->n->pops[pre_pop].size, sizeof(double));
 	double sum_spref_act = 0.0f;
 	double sum_act = 0.0f;
 	double sum_conv = 0.0f;
-	int pre_pop = 0;
-	int post_pop = 1;
 	/* reinit activations for new test scenario */
 	outdata* test_data = (outdata*)calloc(1, sizeof(outdata));
+	/* decoder utils */
+	double max_post_act = 0.0f;
+        int max_act_idx = 0;
+	double x_n = 0.0f;
+        double discr_factor = 0.0f;
+	double limL = 0.0f, limH = 0.0f;
+	int idL = 0, idH = 0;
+	double tol = 0.0f;
 
         for(int didx = 0; didx < learning_runtime->in->len; didx++){
    	    /* use the learned sensory elicited synaptic weights and compute activation for first population */
@@ -243,7 +251,7 @@ outdata* test_inference(outdata* learning_runtime)
                                              exp(-pow((insample - learning_runtime->sim->n->pops[pre_pop].Winput[nidx]),2)/
 						(2*pow(learning_runtime->sim->n->pops[pre_pop].s[nidx], 2)));
                       }
-                      /* normalize the activity vector of the presynaptic population */
+		      /* normalize the activity vector of the presynaptic population */
                       for(int snid = 0; snid<learning_runtime->sim->n->pops[pre_pop].size; snid++)
                               tot_act += cur_act[snid];
 		      for(int snid = 0; snid<learning_runtime->sim->n->pops[pre_pop].size; snid++)
@@ -255,54 +263,51 @@ outdata* test_inference(outdata* learning_runtime)
 									         learning_runtime->sim->eta[learning_runtime->sim->tf_lrn_cross-1]*cur_act[nidx];
 		     }
 		     /* compute the mapping from the input activity through the Hebbian matrix to infer the paired activity */
-		     /* reset current activity value for the post-synaptic popualation */
-		     cur_act = (double*)calloc(learning_runtime->sim->n->pops[0].size, sizeof(double));
 		     for(int i=0;i<learning_runtime->sim->n->pops[post_pop].size;i++){
                         for(int j=0; j<learning_runtime->sim->n->pops[post_pop].size; j++){
 			     learning_runtime->sim->n->pops[post_pop].a[i] += learning_runtime->sim->n->pops[post_pop].Wcross[i][j]*learning_runtime->sim->n->pops[pre_pop].a[j];
 			}
-			cur_act[i] = learning_runtime->sim->n->pops[post_pop].a[i];
 		     } 
-	
-		      /* normalize the activity vector of the post synaptic population */
-		      tot_act = 0.0f;
-                      for(int snid = 0; snid<learning_runtime->sim->n->pops[post_pop].size; snid++)
-                              tot_act += cur_act[snid];
-		      for(int snid = 0; snid<learning_runtime->sim->n->pops[post_pop].size; snid++)
-	                      cur_act[snid] /= tot_act;
-		      /* update the activity for next iteration */
-                      for(int nidx = 0; nidx<learning_runtime->sim->n->pops[pre_pop].size;nidx++){
-                              learning_runtime->sim->n->pops[post_pop].a[nidx] = (1-learning_runtime->sim->eta[learning_runtime->sim->tf_lrn_cross-1])*
-										  learning_runtime->sim->n->pops[post_pop].a[nidx] + 
-									          learning_runtime->sim->eta[learning_runtime->sim->tf_lrn_cross-1]*cur_act[nidx];
-		     }
-
+		    
+		     /* decoding procedure */
 		     /* find max activation in the mapped activation useful in extracting a first guess of the decoded value in the diustance optimizer */
-		     double max_post_act = 0;
-		     int max_act_idx = 0;
+		     max_post_act = 0;
+		     max_act_idx = 0;
 		     for(int i=0; i<learning_runtime->sim->n->pops[post_pop].size;i++){
-				if(learning_runtime->sim->n->pops[post_pop].a[i] > max_post_act){
-					max_post_act = learning_runtime->sim->n->pops[post_pop].a[i];
-					max_act_idx = i;
-				}
-		    }
-		   
-                    /* analytically extract the scalar value from the activity profile as an initial guess for the optimizer */
-		    double x_n = 0.0;
-		    double discr_factor = sqrt(-2*pow(learning_runtime->sim->n->pops[post_pop].s[max_act_idx], 2) * 
+		 	if(learning_runtime->sim->n->pops[post_pop].a[i] > max_post_act){
+				max_post_act = learning_runtime->sim->n->pops[post_pop].a[i];
+				max_act_idx = i;
+			}
+		     }
+		    switch(DECODER){
+		      case NAIVE:
+                	/* analytically extract the scalar value from the activity profile */
+			x_n = 0.0;
+			discr_factor = sqrt(-2*pow(learning_runtime->sim->n->pops[post_pop].s[max_act_idx], 2) * 
 					      log(max_post_act*sqrt(2*M_PI)*learning_runtime->sim->n->pops[post_pop].s[max_act_idx]));
-		    if(max_act_idx > learning_runtime->sim->n->pops[post_pop].size/2)
+			if(max_act_idx > learning_runtime->sim->n->pops[post_pop].size/2)
 				x_n = learning_runtime->sim->n->pops[post_pop].Winput[max_act_idx] + discr_factor;
-		    else
+			else
 				x_n = learning_runtime->sim->n->pops[post_pop].Winput[max_act_idx] - discr_factor;
 
-		   /* recover the value --> decoding using naive approach */
-		   // learning_runtime->in->data[didx][post_pop] = x_n;
-		
-		   /* recover the value --> decoding using optimizer */
-		   learning_runtime->in->data[didx][post_pop] = decode_population(learning_runtime->sim->n, pre_pop, post_pop, x_n);
+		   	/* recover the value --> decoding using naive approach */
+		   	learning_runtime->in->data[didx][post_pop] = x_n;
+		       break;
+		       case OPTIMIZER:
+				/* recover the value --> decoding using optimizer starting with the middle value of the learned pref. val. interval */
+				if(max_act_idx == 0) idL = 0;
+				else idL = max_act_idx - 1;
+				if(max_act_idx == learning_runtime->sim->n->pops[post_pop].size) idH = learning_runtime->sim->n->pops[post_pop].size;
+				else idH = max_act_idx + 1;
+				limL = learning_runtime->sim->n->pops[pre_pop].Winput[idL];
+				limH = learning_runtime->sim->n->pops[pre_pop].Winput[idH];
+				tol=(1.0e-6)*(limL + limH)/2.0;		
+		   		learning_runtime->in->data[didx][post_pop] = decode_population(learning_runtime->sim->n, limL, limH, tol,  pre_pop, post_pop);
+	               break;	
+		      }
 	    
 	 }/* end for each sample in the dataset */
+
 	 /* fill in the return struct */
         test_data->in = learning_runtime->in;
         test_data->sim = learning_runtime->sim;

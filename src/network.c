@@ -1,5 +1,9 @@
 #include "simulation.h"
 
+#define SIGN(a,b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
+#define ITMAX 1000
+#define EPS 1.0e-12
+
 /* initialize a neural population */
 population init_population(short idx, int psize)
 {
@@ -142,59 +146,96 @@ unsigned int shuffle_pops_ids(unsigned int *ar, size_t n, unsigned int k)
     return changed;
 }
 
-/* decode population to real-world value */
-double decode_population(network*n, int pre_id, int post_id, double init_cond)
+/* decoder metric for optimization  */
+double decoder_metric(network*n, int pre_id, int post_id, double guess)
 {
-	double dec_val = init_cond;
-	int num_iters_opt = 2000;
-	double precision = 1e-6;
-	double fx = 0.0f, temp_fx = 0.0f, fx_ant = 0.0f;
-	double dfx = 0.0f;
 	double* dir_act = (double*)calloc(n->pops[post_id].size, sizeof(double));
 	double* ind_act = n->pops[post_id].a;
-	double tot_act = 0.0f;
 	double* cur_act = (double*)calloc(n->pops[post_id].size, sizeof(double));
+	double tot_act = 0.0f;
+	double temp_fx = 0.0f;
+	double fx = 0.0f;
 
-	printf("ai\n");
-	for(int v = 0; v< n->pops[post_id].size; v++){	
-			printf(" %lf  \n", ind_act[v]);
-		}
-
-	/* use Newton-Raphson optimization to find precise decoded value */
-	for(int opt_iter = 0; opt_iter < num_iters_opt; opt_iter++){
-		/* compute direct activation given the optimized variable */
-		for(int i=0; i<n->pops[post_id].size; i++){
-				cur_act[i] = (1/(sqrt(2*M_PI)*n->pops[post_id].s[i]))*
-                                             exp(-pow((dec_val - n->pops[post_id].Winput[i]),2)/
-					     (2*pow(n->pops[post_id].s[i], 2)));
+	/* compute direct activation given the optimized variable */
+	for(int i=0; i<n->pops[post_id].size; i++){
+			cur_act[i] = (1/(sqrt(2*M_PI)*n->pops[post_id].s[i]))*
+                                      exp(-pow((guess - n->pops[post_id].Winput[i]),2)/
+				     (2*pow(n->pops[post_id].s[i], 2)));
 				
-		} 
-		/* normalization routine in the optimization process */
-		for(int snid = 0; snid<n->pops[post_id].size; snid++)
-                              tot_act += cur_act[snid];
-                for(int snid = 0; snid<n->pops[post_id].size; snid++)
-                              cur_act[snid] /= tot_act;
-                /* update the activity for next iteration */
-		dir_act = cur_act;
-		
-		printf("ai | ad\n");
-		for(int v = 0; v< n->pops[post_id].size; v++){	
-			printf(" %lf  | % lf \n", ind_act[v], dir_act[v]);
-		}
-   	    	/* function to optimize is the error between the direct and indirect activation */
-		for(int i=0;i<n->pops[post_id].size;i++)
-			temp_fx += pow(ind_act[i] - dir_act[i], 2);
-		fx = sqrt(temp_fx);
-		/* ... and its derivative computed numerically */
-		dfx = (fx - fx_ant)/2;
-		/* update the estimate of the value */
-		dec_val -= (fx/dfx);
-		/* check convergence */
-		if(fabs(fx/dfx) < precision){ printf("precision reached\n"); break;}
-		/* update history */
-		fx_ant = fx;
-		temp_fx = 0.0f;
-		tot_act = 0.0f;
 	}
-	return dec_val;
+	/* normalization routine */
+	for(int snid = 0; snid<n->pops[post_id].size; snid++)
+                 tot_act += cur_act[snid];
+        for(int snid = 0; snid<n->pops[post_id].size; snid++)
+                 cur_act[snid] /= tot_act;
+        /* update the activity for next iteration */
+	dir_act = cur_act;		       
+    	/* function to optimize is the error between the direct and indirect activation */
+	for(int i=0;i<n->pops[post_id].size;i++)
+		temp_fx += pow(ind_act[i] - dir_act[i], 2);
+	fx = sqrt(temp_fx);
+	return fx;
+}
+
+/* decode population to real-world value */
+double decode_population(network* n, double x1, double x2, double tol, int pre_id, int post_id)
+{
+	int iter;
+	double a=x1,b=x2,c=x2,d,e,min1,min2;
+	double fa=decoder_metric(n, pre_id, post_id, a),fb=decoder_metric(n, pre_id, post_id, b),fc,p,q,r,s,tol1,xm;
+
+	fc=fb;
+	for (iter=1;iter<=ITMAX;iter++) {
+		if ((fb > 0.0 && fc > 0.0) || (fb < 0.0 && fc < 0.0)) {
+			c=a;
+			fc=fa;
+			e=d=b-a;
+		}
+		if (fabs(fc) < fabs(fb)) {
+			a=b;
+			b=c;
+			c=a;
+			fa=fb;
+			fb=fc;
+			fc=fa;
+		}
+		tol1=2.0*EPS*fabs(b)+0.5*tol;
+		xm=0.5*(c-b);
+		if (fabs(xm) <= tol1 || fb == 0.0) return b;
+		if (fabs(e) >= tol1 && fabs(fa) > fabs(fb)) {
+			s=fb/fa;
+			if (a == c) {
+				p=2.0*xm*s;
+				q=1.0-s;
+			} else {
+				q=fa/fc;
+				r=fb/fc;
+				p=s*(2.0*xm*q*(q-r)-(b-a)*(r-1.0));
+				q=(q-1.0)*(r-1.0)*(s-1.0);
+			}
+			if (p > 0.0) q = -q;
+			p=fabs(p);
+			min1=3.0*xm*q-fabs(tol1*q);
+			min2=fabs(e*q);
+			if (2.0*p < (min1 < min2 ? min1 : min2)) {
+				e=d;
+				d=p/q;
+			} else {
+				d=xm;
+				e=d;
+			}
+		} else {
+			d=xm;
+			e=d;
+		}
+		a=b;
+		fa=fb;
+		if (fabs(d) > tol1)
+			b += d;
+		else
+			b += SIGN(tol1,xm);
+		fb=decoder_metric(n, pre_id, post_id, b);
+	}
+	printf("decode_population: Maximum number of iterations exceeded in decoder optimizer.");
+	return 0.0;
 }

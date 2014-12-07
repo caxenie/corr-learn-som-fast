@@ -15,7 +15,6 @@
 #define WRAP_POP 	0
 #define ASYMM_FUNC 	0
 #define TESTS_ON	
-
 /* adaptive processes parametrization types */
 enum{
 	SIGMOID = 0, 
@@ -36,7 +35,14 @@ enum{
 	EXT_TESTS,
 };
 
-#define LEARNING_RULE COVARIANCE
+/* decoder type */
+enum{
+	NAIVE = 0,
+	OPTIMIZER,
+};
+
+#define DECODER 	OPTIMIZER // {NAIVE, OPTIMIZER}
+#define LEARNING_RULE 	COVARIANCE
 
 /* simulation parameters */
 typedef struct{

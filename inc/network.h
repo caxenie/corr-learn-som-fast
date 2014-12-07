@@ -42,5 +42,8 @@ double* parametrize_process(double v0, double vf, int t0, int tf, short type);
 long num_shuffles(int n, int r);
 /* shuffle the maps ids for cross-modal circular permutation in Hebbian learning rule */
 unsigned int shuffle_pops_ids(unsigned int *ar, size_t n, unsigned int k);
+/* decoder metric for optimization  */
+double decoder_metric(network*n, int pre_id, int post_id, double guess);
 /* decode population to real-world value */
-double decode_population(network*n, int pre_id, int post_id,  double init_cond);
+double decode_population(network* n, double x1, double x2, double tol, int pre_id, int post_id);
+
