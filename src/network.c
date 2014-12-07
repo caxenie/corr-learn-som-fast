@@ -1,9 +1,5 @@
 #include "simulation.h"
 
-#define SIGN(a,b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
-#define ITMAX 1000
-#define EPS 1.0e-12
-
 /* initialize a neural population */
 population init_population(short idx, int psize)
 {
@@ -199,11 +195,11 @@ double decode_population(network* n, double x1, double x2, double tol, int pre_i
 			fb=fc;
 			fc=fa;
 		}
-		tol1=2.0*EPS*fabs(b)+0.5*tol;
+		tol1=2.0*EPS*fabs(b)+0.5*tol; // convergence check
 		xm=0.5*(c-b);
 		if (fabs(xm) <= tol1 || fb == 0.0) return b;
 		if (fabs(e) >= tol1 && fabs(fa) > fabs(fb)) {
-			s=fb/fa;
+			s=fb/fa;		// Attempt inverse quadratic interpolation
 			if (a == c) {
 				p=2.0*xm*s;
 				q=1.0-s;
@@ -213,29 +209,29 @@ double decode_population(network* n, double x1, double x2, double tol, int pre_i
 				p=s*(2.0*xm*q*(q-r)-(b-a)*(r-1.0));
 				q=(q-1.0)*(r-1.0)*(s-1.0);
 			}
-			if (p > 0.0) q = -q;
+			if (p > 0.0) q = -q;	// Check whether in bounds
 			p=fabs(p);
 			min1=3.0*xm*q-fabs(tol1*q);
 			min2=fabs(e*q);
 			if (2.0*p < (min1 < min2 ? min1 : min2)) {
-				e=d;
+				e=d;		// Accept interpolation
 				d=p/q;
 			} else {
-				d=xm;
+				d=xm;		// Interpolation failed, use bisection
 				e=d;
 			}
 		} else {
-			d=xm;
+			d=xm;			// Bounds decreasing too slowly, use bisection
 			e=d;
 		}
-		a=b;
+		a=b;				// Move last best guess to a
 		fa=fb;
-		if (fabs(d) > tol1)
+		if (fabs(d) > tol1)		// Evaluate new trial root
 			b += d;
 		else
 			b += SIGN(tol1,xm);
 		fb=decoder_metric(n, pre_id, post_id, b);
 	}
 	printf("decode_population: Maximum number of iterations exceeded in decoder optimizer.");
-	return 0.0;
+	return 0.0;				// Should never get here
 }

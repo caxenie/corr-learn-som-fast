@@ -15,6 +15,11 @@
 #define WRAP_POP 	0
 #define ASYMM_FUNC 	0
 #define TESTS_ON	
+
+#define SIGN(a,b)       ((b) >= 0.0 ? fabs(a) : -fabs(a))
+#define ITMAX           100
+#define EPS             3.0e-6
+
 /* adaptive processes parametrization types */
 enum{
 	SIGMOID = 0, 

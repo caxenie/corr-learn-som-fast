@@ -294,7 +294,7 @@ outdata* test_inference(outdata* learning_runtime)
 		   	learning_runtime->in->data[didx][post_pop] = x_n;
 		       break;
 		       case OPTIMIZER:
-				/* recover the value --> decoding using optimizer starting with the middle value of the learned pref. val. interval */
+				/* recover the value --> decoding using optimizer  */
 				if(max_act_idx == 0) idL = 0;
 				else idL = max_act_idx - 1;
 				if(max_act_idx == learning_runtime->sim->n->pops[post_pop].size) idH = learning_runtime->sim->n->pops[post_pop].size;
