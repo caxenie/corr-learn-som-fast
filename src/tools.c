@@ -27,7 +27,7 @@ double* gauss_rand(int num_vals, double mean, double std_dev)
 }
 
 /* non-uniform random distribution generator */
-double * generate_rnd_vector(int type, int range, int numv, int dist)
+double * generate_rnd_vector(int type, int range, int numv, int dist, int dtype)
 {	
 	double *out = (double*)calloc(numv, sizeof(double));
 	double *var = (double*)calloc(numv, sizeof(double));
@@ -41,8 +41,15 @@ double * generate_rnd_vector(int type, int range, int numv, int dist)
 	
 	switch(type){
 		case UNIFORM:
-			for(int i=0;i<numv; i++){
-				out[i] = -range + randf()*(2*range);
+			if(dtype==TRAINING){
+				for(int i=0;i<numv; i++)
+					out[i] = -range + randf()*(2*range);
+			}
+			if(dtype==TESTING){
+				out[0] = -range;
+				for(int i=1; i<numv; i++){
+			 		out[i] = out[i-1] + (double)(2*range)/numv; // non-random values
+				}
 			}
 		break;
 		case NONUNIFORM:

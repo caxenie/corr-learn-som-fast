@@ -1,10 +1,10 @@
 #include "data.h"
 
 /* read input data from file and populate struct */
-indata* generate_input_data(int np, int psz, int l, int rtype)
+indata* generate_input_data(int np, int psz, int l, int rtype, int dtype)
 {
 	indata *id = (indata*)calloc(1, sizeof(indata));
-	double *base_var = generate_rnd_vector(DIST_TYPE, RANGE, l, NU_DIST_MODEL);
+	double *base_var = generate_rnd_vector(DIST_TYPE, RANGE, l, NU_DIST_MODEL, dtype);
 	double **rel_vars = (double**)calloc(l, sizeof(double));
 
 	id->data = (double**)calloc(l, sizeof(double*));

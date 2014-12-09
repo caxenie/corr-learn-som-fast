@@ -16,9 +16,10 @@
 #define ASYMM_FUNC 	0
 #define TESTS_ON	
 
+/* optimizer utils */
 #define SIGN(a,b)       ((b) >= 0.0 ? fabs(a) : -fabs(a))
 #define ITMAX           100
-#define EPS             3.0e-6
+#define EPS             1.1e-16
 
 /* adaptive processes parametrization types */
 enum{
@@ -47,7 +48,7 @@ enum{
 };
 
 #define DECODER 	OPTIMIZER // {NAIVE, OPTIMIZER}
-#define LEARNING_RULE 	COVARIANCE
+#define LEARNING_RULE 	COVARIANCE // {COVARIANCE, HEBB}
 
 /* simulation parameters */
 typedef struct{

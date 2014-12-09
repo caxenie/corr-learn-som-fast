@@ -265,10 +265,12 @@ outdata* test_inference(outdata* learning_runtime)
 		     /* compute the mapping from the input activity through the Hebbian matrix to infer the paired activity */
 		     for(int i=0;i<learning_runtime->sim->n->pops[post_pop].size;i++){
                         for(int j=0; j<learning_runtime->sim->n->pops[post_pop].size; j++){
-			     learning_runtime->sim->n->pops[post_pop].a[i] += learning_runtime->sim->n->pops[post_pop].Wcross[i][j]*learning_runtime->sim->n->pops[pre_pop].a[j];
+			     learning_runtime->sim->n->pops[post_pop].a[i] += (learning_runtime->sim->n->pops[post_pop].Wcross[i][j]*learning_runtime->sim->n->pops[pre_pop].a[j]);
 			}
 		     } 
-		    
+		     for(int i=0;i<learning_runtime->sim->n->pops[post_pop].size;i++){
+			if(learning_runtime->sim->n->pops[post_pop].a[i]<0.0f) learning_runtime->sim->n->pops[post_pop].a[i] = 0.0f;
+		     }
 		     /* decoding procedure */
 		     /* find max activation in the mapped activation useful in extracting a first guess of the decoded value in the diustance optimizer */
 		     max_post_act = 0;
@@ -299,9 +301,9 @@ outdata* test_inference(outdata* learning_runtime)
 				else idL = max_act_idx - 1;
 				if(max_act_idx == learning_runtime->sim->n->pops[post_pop].size) idH = learning_runtime->sim->n->pops[post_pop].size;
 				else idH = max_act_idx + 1;
-				limL = learning_runtime->sim->n->pops[pre_pop].Winput[idL];
-				limH = learning_runtime->sim->n->pops[pre_pop].Winput[idH];
-				tol=(1.0e-6)*(limL + limH)/2.0;		
+				limL = learning_runtime->sim->n->pops[post_pop].Winput[idL];
+				limH = learning_runtime->sim->n->pops[post_pop].Winput[idH];
+				tol= 1.0e-6; // tol = (1e-6)*fabs(limL + limH)/2.0;		
 		   		learning_runtime->in->data[didx][post_pop] = decode_population(learning_runtime->sim->n, limL, limH, tol,  pre_pop, post_pop);
 	               break;	
 		      }

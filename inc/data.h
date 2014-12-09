@@ -9,7 +9,7 @@ typedef struct{
 }indata;
 
 /* generate input data and populate struct */
-indata* generate_input_data(int np, int psz, int l, int rtype);
+indata* generate_input_data(int np, int psz, int l, int rtype, int dtype);
 
 
 

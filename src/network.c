@@ -145,6 +145,7 @@ unsigned int shuffle_pops_ids(unsigned int *ar, size_t n, unsigned int k)
 /* decoder metric for optimization  */
 double decoder_metric(network*n, int pre_id, int post_id, double guess)
 {
+//	fact = fopen("activations.log", "a+");	
 	double* dir_act = (double*)calloc(n->pops[post_id].size, sizeof(double));
 	double* ind_act = n->pops[post_id].a;
 	double* cur_act = (double*)calloc(n->pops[post_id].size, sizeof(double));
@@ -165,8 +166,8 @@ double decoder_metric(network*n, int pre_id, int post_id, double guess)
         for(int snid = 0; snid<n->pops[post_id].size; snid++)
                  cur_act[snid] /= tot_act;
         /* update the activity for next iteration */
-	dir_act = cur_act;		       
-    	/* function to optimize is the error between the direct and indirect activation */
+	dir_act = cur_act;
+	/* function to optimize is the error between the direct and indirect activation */
 	for(int i=0;i<n->pops[post_id].size;i++)
 		temp_fx += pow(ind_act[i] - dir_act[i], 2);
 	fx = sqrt(temp_fx);
@@ -232,6 +233,6 @@ double decode_population(network* n, double x1, double x2, double tol, int pre_i
 			b += SIGN(tol1,xm);
 		fb=decoder_metric(n, pre_id, post_id, b);
 	}
-	printf("decode_population: Maximum number of iterations exceeded in decoder optimizer.");
+	printf("decode_population: Maximum number of iterations exceeded in decoder optimizer\n");
 	return 0.0;				// Should never get here
 }
