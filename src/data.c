@@ -101,3 +101,4 @@ indata* generate_input_data(int np, int psz, int l, int rtype, int dtype)
 	return id;
 }	
 
+

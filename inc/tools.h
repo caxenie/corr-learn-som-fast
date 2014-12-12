@@ -44,4 +44,6 @@ double randf();
 double * generate_rnd_vector(int type, int range, int numv, int dist, int dtype);
 /* Normal random variate vector generator, of mean m and std. dev. s */
 double* gauss_rand(int num_vals, double mean, double std_dev);
+/* sort generated data vector */
+void sort_input_data(int n, double *ra);
 

@@ -1,4 +1,3 @@
-
 #include "simulation.h"
 
 /* initialize simulation */
@@ -202,7 +201,7 @@ outdata* run_simulation(indata *in, simulation *s)
 		}
 	}
 	/* fill in the return struct */
-	runtime->in = in;
+ 	runtime->in = in;
 	runtime->sim = s;
 	
 	return runtime;
