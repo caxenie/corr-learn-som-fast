@@ -71,6 +71,23 @@ void sort_input_data(int n, double *ra)
         }
 }
 
+/* swap data points */
+void swap_data_points(double *in1, double *in2)
+{
+	double tmp = *in1; *in1 = *in2; *in2 = tmp;	
+}
+
+/* shuffle generated data vector */
+void shuffle_input_data(double *arr, int n)
+{
+	/* Use a different seed value so that we don't get same result each time we run this program */
+	srand ( time(NULL) );
+	for (int i = n-1; i > 0; i--){
+		int j = rand() % (i+1);
+		swap_data_points(&arr[i], &arr[j]);	
+	}
+}
+
 /* non-uniform random distribution generator */
 double * generate_rnd_vector(int type, int range, int numv, int dist, int dtype)
 {	
@@ -86,18 +103,17 @@ double * generate_rnd_vector(int type, int range, int numv, int dist, int dtype)
 	
 	switch(type){
 		case UNIFORM:
-			if(dtype==TRAINING){
-				for(int i=0;i<numv; i++)
-					out[i] = -range + randf()*(2*range);
-				/* sort the vector */
-				sort_input_data(numv, out);		
+			/* random data */
+			// for(int i=0;i<numv; i++)
+			//	out[i] = -range + randf()*(2*range);
+			/* sequential data */
+			out[0] = -range;
+			for(int i=1; i<numv; i++){
+				out[i] = out[i-1] + (double)(2*range)/numv; // non-random values
 			}
-			if(dtype==TESTING){
-		 		out[0] = -range;
-				for(int i=1; i<numv; i++){
-			 		out[i] = out[i-1] + (double)(2*range)/numv; // non-random values
-				}
-			}
+			if(dtype==TRAINING)
+				/* randomize the data */
+			        shuffle_input_data(out, numv);	
 		break;
 		case NONUNIFORM:
 			switch(dist){

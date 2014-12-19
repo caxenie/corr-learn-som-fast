@@ -28,7 +28,7 @@ for pidx = 1:rdata.sim.net.nsize
     ylabel(sprintf('Winput - pop %d', pidx));
     grid off; box off; title(sprintf('Input weight vector, adapt %d epochs', rdata.sim.tf_lrn_in));
     subplot(3, 1, 2);
-    imagesc(rdata.sim.net.pops(pidx).Wcross, [0, 1]); box off; colorbar;
+    imagesc((rdata.sim.net.pops(pidx).Wcross), [0, 1]); box off; colorbar;
     xlabel('cross learning epochs'); ylabel(sprintf('Wcross - pop %d', pidx));
     grid off; box off; title(sprintf('Cross weight vector, adapt %d epochs', rdata.sim.tf_lrn_cross));
     subplot(3, 1, 3);

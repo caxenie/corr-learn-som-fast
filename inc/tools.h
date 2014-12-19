@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <math.h>
+#include <time.h>
 
 /* data distribution type */
 enum{
@@ -46,4 +47,7 @@ double * generate_rnd_vector(int type, int range, int numv, int dist, int dtype)
 double* gauss_rand(int num_vals, double mean, double std_dev);
 /* sort generated data vector */
 void sort_input_data(int n, double *ra);
-
+/* shuffle generated data vector -> Fisher-Yates shuffler */
+void shuffle_input_data(double *in, int size);
+/* swap data points */
+void swap_data_points(double *in1, double *in2);
