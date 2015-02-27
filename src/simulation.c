@@ -8,7 +8,7 @@ simulation* init_simulation(int nepochs, network*net)
 
 	s->max_epochs = nepochs;
 	s->t0 = 0;
-	s->tf_lrn_in = s->max_epochs/4;
+	s->tf_lrn_in = s->max_epochs/10;
 	s->tf_lrn_cross = s->max_epochs;
 	
 	s->alpha = (double*)calloc(s->tf_lrn_in, sizeof(double));
@@ -16,7 +16,7 @@ simulation* init_simulation(int nepochs, network*net)
 	s->eta = (double*)calloc(s->tf_lrn_cross, sizeof(double));
 	s->xi = (double*)calloc(s->tf_lrn_cross, sizeof(double));
 	s->alpha = parametrize_process(ALPHAI, ALPHAF, s->t0, s->tf_lrn_in, INVTIME);
-	s->sigma = parametrize_process((net->pops->size)/3, SIGMAF, s->t0, s->tf_lrn_in, INVTIME);
+	s->sigma = parametrize_process((net->pops->size)/2, SIGMAF, s->t0, s->tf_lrn_in, INVTIME);
 	for (int i = 0;i<s->tf_lrn_cross;i++)
 		s->eta[i] = ETA;
 	for (int i = 0;i<s->tf_lrn_cross;i++)
@@ -119,7 +119,7 @@ outdata* run_simulation(indata *in, simulation *s)
 				    }/* end loop through populations */	
 				}/* end loop of sensory data presentation */
 			}/* end loop for training input data distribution */
-
+	
 			/* cross-modal learning loop */
                         for(int didx = 0; didx < in->len; didx++){
 				/* use the learned sensory elicited synaptic weights and compute activation for each population */
@@ -203,7 +203,17 @@ outdata* run_simulation(indata *in, simulation *s)
 	/* fill in the return struct */
  	runtime->in = in;
 	runtime->sim = s;
-	
+	/* free the resources */
+	free(cur_act);
+	for(int i=0;i<s->n->nsize;i++)
+		free(avg_act[i]);
+	free(avg_act);
+	free(sum_wcross);
+	free(max_wcross);
+	free(hwi);
+	for(int i=0;i<pre_post_pair*num_shuffles(s->n->nsize, pre_post_pair); i++)
+		free(sol[i]);
+	free(sol);
 	return runtime;
 }
 
@@ -312,7 +322,11 @@ outdata* test_inference(outdata* learning_runtime)
 	 /* fill in the return struct */
         test_data->in = learning_runtime->in;
         test_data->sim = learning_runtime->sim;
-
+	/* clear allocated resources */
+	free(cur_act);
+	for(int i = 0;i<learning_runtime->sim->n->nsize; i++)
+		free(avg_act[i]);
+	free(avg_act);
 	return test_data;
 }
 
@@ -363,6 +377,8 @@ char* dump_runtime_data(outdata *od)
         }
         fwrite(od, sizeof(outdata), 1, fout);
         fclose(fout);
+	free(tinfo);
+	free(nfout);
         return nfout;
 }
 

@@ -10,7 +10,7 @@ population init_population(short idx, int psize)
 	p.id = idx;
 	p.size = psize;	
 
-	p.Winput = (double*)malloc(p.size*sizeof(population));
+	p.Winput = (double*)calloc(p.size, sizeof(population));
 	p.Wcross = (double**)calloc(p.size, sizeof(population*));
 	for(int i = 0; i<p.size; i++)
 		p.Wcross[i] = (double*)calloc(p.size, sizeof(population));
@@ -171,6 +171,8 @@ double decoder_metric(network*n, int pre_id, int post_id, double guess)
 	for(int i=0;i<n->pops[post_id].size;i++)
 		temp_fx += pow(ind_act[i] - dir_act[i], 2);
 	fx = sqrt(temp_fx);
+	/* clear allocated resources */
+	free(ind_act);
 	return fx;
 }
 
