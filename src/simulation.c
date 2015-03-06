@@ -8,7 +8,7 @@ simulation* init_simulation(int nepochs, network*net)
 
 	s->max_epochs = nepochs;
 	s->t0 = 0;
-	s->tf_lrn_in = s->max_epochs/10;
+	s->tf_lrn_in = s->max_epochs/8;
 	s->tf_lrn_cross = s->max_epochs;
 	
 	s->alpha = (double*)calloc(s->tf_lrn_in, sizeof(double));
@@ -112,14 +112,15 @@ outdata* run_simulation(indata *in, simulation *s)
 										    exp(-pow(fabs(nidx -  win_idx), 2)/(2*pow(s->sigma[tidx], 2)))*
 										    (pow((insample - s->n->pops[pidx].Winput[nidx]) , 2) - pow(s->n->pops[pidx].s[nidx], 2));
 						else
-							s->n->pops[pidx].s[nidx] += s->alpha[tidx]*0.005*
+							s->n->pops[pidx].s[nidx] += s->alpha[tidx]*
+										    (1/(sqrt(2*M_PI)*s->sigma[tidx]))*
                                                                         	    exp(-pow(fabs(nidx -  win_idx), 2)/(2*pow(s->sigma[tidx], 2)))*
                                         	                                    (pow((insample - s->n->pops[pidx].Winput[nidx]) , 2) - pow(s->n->pops[pidx].s[nidx], 2));
 					}/* end for each neuron in the population */
 				    }/* end loop through populations */	
 				}/* end loop of sensory data presentation */
 			}/* end loop for training input data distribution */
-	
+
 			/* cross-modal learning loop */
                         for(int didx = 0; didx < in->len; didx++){
 				/* use the learned sensory elicited synaptic weights and compute activation for each population */
@@ -203,17 +204,7 @@ outdata* run_simulation(indata *in, simulation *s)
 	/* fill in the return struct */
  	runtime->in = in;
 	runtime->sim = s;
-	/* free the resources */
-	free(cur_act);
-	for(int i=0;i<s->n->nsize;i++)
-		free(avg_act[i]);
-	free(avg_act);
-	free(sum_wcross);
-	free(max_wcross);
-	free(hwi);
-	for(int i=0;i<pre_post_pair*num_shuffles(s->n->nsize, pre_post_pair); i++)
-		free(sol[i]);
-	free(sol);
+	
 	return runtime;
 }
 
@@ -322,11 +313,7 @@ outdata* test_inference(outdata* learning_runtime)
 	 /* fill in the return struct */
         test_data->in = learning_runtime->in;
         test_data->sim = learning_runtime->sim;
-	/* clear allocated resources */
-	free(cur_act);
-	for(int i = 0;i<learning_runtime->sim->n->nsize; i++)
-		free(avg_act[i]);
-	free(avg_act);
+
 	return test_data;
 }
 
@@ -377,8 +364,6 @@ char* dump_runtime_data(outdata *od)
         }
         fwrite(od, sizeof(outdata), 1, fout);
         fclose(fout);
-	free(tinfo);
-	free(nfout);
         return nfout;
 }
 

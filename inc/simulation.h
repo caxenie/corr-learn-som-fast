@@ -1,6 +1,6 @@
-#include <stddef.h>
 #include "network.h"
 #include "data.h"
+#include <stddef.h>
 
 /* simulation constant parameters */
 #define MAX_EPOCHS      400

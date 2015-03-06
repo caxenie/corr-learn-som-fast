@@ -97,11 +97,7 @@ indata* generate_input_data(int np, int psz, int l, int rtype, int dtype)
 			else id->data[i][j] = rel_vars[i][j];	
 		}
 	}
-	/* free allocated resources */
-	free(base_var);
-	for(int i = 0; i<id->len;i++)
-		free(rel_vars[i]);
-	free(rel_vars);
+
 	return id;
 }	
 
