@@ -107,15 +107,10 @@ outdata* run_simulation(indata *in, simulation *s)
 						/* compute the sensory input synaptic weight */
 						s->n->pops[pidx].Winput[nidx] += s->alpha[tidx]*hwi[nidx]*(insample - s->n->pops[pidx].Winput[nidx]); 
 						/* update the shape of the tuning curve for the current neuron */
-						if(!ASYMM_FUNC)
-							s->n->pops[pidx].s[nidx] += s->alpha[tidx]*
-										    exp(-pow(fabs(nidx -  win_idx), 2)/(2*pow(s->sigma[tidx], 2)))*
-										    (pow((insample - s->n->pops[pidx].Winput[nidx]) , 2) - pow(s->n->pops[pidx].s[nidx], 2));
-						else
-							s->n->pops[pidx].s[nidx] += s->alpha[tidx]*
-										    (1/(sqrt(2*M_PI)*s->sigma[tidx]))*
-                                                                        	    exp(-pow(fabs(nidx -  win_idx), 2)/(2*pow(s->sigma[tidx], 2)))*
-                                        	                                    (pow((insample - s->n->pops[pidx].Winput[nidx]) , 2) - pow(s->n->pops[pidx].s[nidx], 2));
+						s->n->pops[pidx].s[nidx] += s->alpha[tidx]*
+									    (1/(sqrt(2*M_PI)*s->sigma[tidx]))*
+                                                                       	    hwi[nidx]*
+                                        	                            (pow((insample - s->n->pops[pidx].Winput[nidx]) , 2) - pow(s->n->pops[pidx].s[nidx], 2));
 					}/* end for each neuron in the population */
 				    }/* end loop through populations */	
 				}/* end loop of sensory data presentation */
