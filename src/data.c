@@ -67,6 +67,7 @@ indata* generate_input_data(int np, int psz, int l, int rtype, int dtype)
 				rel_vars[i][2] = pow(base_var[i], 2); 
 			}
 		     }
+		break;
 		case 4:
 		    switch(rtype){
 			case COMPLEX:

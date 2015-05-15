@@ -4,9 +4,9 @@
 
 /* simulation constant parameters */
 #define MAX_EPOCHS      400
-#define N_POP           2
+#define N_POP           5
 #define POP_SIZE        100
-#define DATASET_LEN     2500
+#define DATASET_LEN     500
 #define ALPHAI 		0.1f
 #define ALPHAF 		0.001f
 #define SIGMAF 		1.0f

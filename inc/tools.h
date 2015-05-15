@@ -36,7 +36,7 @@ enum{
 };
 
 #define DIST_TYPE  	UNIFORM //{ UNIFORM, NONUNIFORM}
-#define NU_DIST_MODEL 	CONVEX
+#define NU_DIST_MODEL 	GAUSS
 #define RANGE 		1
 
 /* floating point radom number generator between 0 and 1 */

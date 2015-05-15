@@ -104,13 +104,13 @@ double * generate_rnd_vector(int type, int range, int numv, int dist, int dtype)
 	switch(type){
 		case UNIFORM:
 			/* random data */
-			// for(int i=0;i<numv; i++)
-			//	out[i] = -range + randf()*(2*range);
+			 for(int i=0;i<numv; i++)
+				out[i] = -range + randf()*(2*range);
 			/* sequential data */
-			out[0] = -range;
-			for(int i=1; i<numv; i++){
-				out[i] = out[i-1] + (double)(2*range)/numv; // non-random values
-			}
+			//out[0] = -range;
+			//for(int i=1; i<numv; i++){
+			//	out[i] = out[i-1] + (double)(2*range)/numv; // non-random values
+			//}
 			if(dtype==TRAINING)
 				/* randomize the data */
 			        shuffle_input_data(out, numv);	
