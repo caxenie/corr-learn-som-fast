@@ -17,10 +17,16 @@ simulation* init_simulation(int nepochs, network*net)
 	s->xi = (double*)calloc(s->tf_lrn_cross, sizeof(double));
 	s->alpha = parametrize_process(ALPHAI, ALPHAF, s->t0, s->tf_lrn_in, INVTIME);
 	s->sigma = parametrize_process((net->pops->size)/2, SIGMAF, s->t0, s->tf_lrn_in, INVTIME);
+	
+	s->eta = parametrize_process(ETAI, ETAF, s->t0, s->tf_lrn_cross, INVTIME);
+	s->xi = parametrize_process(XII, XIF, s->t0, s->tf_lrn_cross, INVTIME);
+	
+#if 0
 	for (int i = 0;i<s->tf_lrn_cross;i++)
 		s->eta[i] = ETA;
 	for (int i = 0;i<s->tf_lrn_cross;i++)
 		s->xi[i] = XI;
+#endif
 	s->n = net;
 	return s;
 }

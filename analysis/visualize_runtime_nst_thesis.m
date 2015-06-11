@@ -49,7 +49,7 @@ for pidx = 2:rdata.sim.net.nsize
     h = barh(b, c, 'hist'); box off;
     set(get(h, 'Parent'), 'xdir', 'r');  set(gca,'visible','off');
     subplot(8, 8, [19 46]);
-    imagesc((rdata.sim.net.pops(pidx).Wcross'), [0, 1]); box off; set(gca,'YTick',[], 'XTick',[]);
+    imagesc((rdata.sim.net.pops(pidx).Wcross), [0, 1]); box off; set(gca,'YTick',[], 'XTick',[]);
     subplot(8, 8, [23 48]);
     plot(rdata.sim.net.pops(pidx).s, sprintf('.%s',idcolor(pidx))); box off; view([90 90]);set(gca,'YTick',[], 'XTick',[],'linewidth',3);
     subplot(8, 8, [51 62]);

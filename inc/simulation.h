@@ -4,14 +4,16 @@
 
 /* simulation constant parameters */
 #define MAX_EPOCHS      400
-#define N_POP           5
+#define N_POP           2
 #define POP_SIZE        100
 #define DATASET_LEN     500
 #define ALPHAI 		0.1f
 #define ALPHAF 		0.001f
 #define SIGMAF 		1.0f
-#define ETA   		1.0f
-#define XI    		0.001f
+#define ETAI   		1.2f
+#define ETAF		1.0f
+#define XII    		0.002f
+#define XIF		0.001f		
 #define WRAP_POP 	0
 #define TESTS_ON	
 
