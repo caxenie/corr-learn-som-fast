@@ -23,9 +23,9 @@ simulation* init_simulation(int nepochs, network*net)
 	
 #if 0
 	for (int i = 0;i<s->tf_lrn_cross;i++)
-		s->eta[i] = ETA;
+		s->eta[i] = ETAF;
 	for (int i = 0;i<s->tf_lrn_cross;i++)
-		s->xi[i] = XI;
+		s->xi[i] = XIF;
 #endif
 	s->n = net;
 	return s;
@@ -273,7 +273,7 @@ outdata* test_inference(outdata* learning_runtime)
 			if(learning_runtime->sim->n->pops[post_pop].a[i]<0.0f) learning_runtime->sim->n->pops[post_pop].a[i] = 0.0f;
 		     }
 		     /* decoding procedure */
-		     /* find max activation in the mapped activation useful in extracting a first guess of the decoded value in the diustance optimizer */
+		     /* find max activation in the mapped activation useful in extracting a first guess of the decoded value in the distance optimizer */
 		     max_post_act = 0;
 		     max_act_idx = 0;
 		     for(int i=0; i<learning_runtime->sim->n->pops[post_pop].size;i++){
@@ -297,15 +297,17 @@ outdata* test_inference(outdata* learning_runtime)
 		   	learning_runtime->in->data[didx][post_pop] = x_n;
 		       break;
 		       case OPTIMIZER:
+				
 				/* recover the value --> decoding using optimizer  */
-				if(max_act_idx == 0) idL = 0;
-				else idL = max_act_idx - 1;
-				if(max_act_idx == learning_runtime->sim->n->pops[post_pop].size) idH = learning_runtime->sim->n->pops[post_pop].size;
-				else idH = max_act_idx + 1;
-				limL = learning_runtime->sim->n->pops[post_pop].Winput[idL];
-				limH = learning_runtime->sim->n->pops[post_pop].Winput[idH];
-				tol= 1.0e-6; // tol = (1e-6)*fabs(limL + limH)/2.0;		
-		   		learning_runtime->in->data[didx][post_pop] = decode_population(learning_runtime->sim->n, limL, limH, tol,  pre_pop, post_pop);
+				tol= 1.0e-10; // tol = (1e-6)*fabs(limL + limH)/2.0;		
+				limL = learning_runtime->sim->n->pops[post_pop].Winput[max_act_idx] - 0.0045;
+				limH = learning_runtime->sim->n->pops[post_pop].Winput[max_act_idx] + 0.0045;
+				learning_runtime->in->data[didx][post_pop] = decode_population(learning_runtime->sim->n, 
+									  		   	limL, 
+											   	limH, 
+											   	tol,  
+											   	pre_pop, 
+											   	post_pop);
 	               break;	
 		      }
 	    
