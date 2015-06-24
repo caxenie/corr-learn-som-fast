@@ -19,8 +19,8 @@
 
 /* optimizer utils */
 #define SIGN(a,b)       ((b) >= 0.0 ? fabs(a) : -fabs(a))
-#define ITMAX           1000
-#define EPS             1.1e-16
+#define ITMAX           50
+#define EPS             1.1e-8
 
 /* adaptive processes parametrization types */
 enum{

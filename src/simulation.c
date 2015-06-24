@@ -297,18 +297,16 @@ outdata* test_inference(outdata* learning_runtime)
 		   	learning_runtime->in->data[didx][post_pop] = x_n;
 		       break;
 		       case OPTIMIZER:
-				
-				/* recover the value --> decoding using optimizer  */
-				tol= 1.0e-10; // tol = (1e-6)*fabs(limL + limH)/2.0;		
-				limL = learning_runtime->sim->n->pops[post_pop].Winput[max_act_idx] - 0.0045;
-				limH = learning_runtime->sim->n->pops[post_pop].Winput[max_act_idx] + 0.0045;
-				learning_runtime->in->data[didx][post_pop] = decode_population(learning_runtime->sim->n, 
-									  		   	limL, 
-											   	limH, 
-											   	tol,  
-											   	pre_pop, 
-											   	post_pop);
-	               break;	
+	               /* recover the value --> decoding using optimizer  */
+				if(max_act_idx == 0) idL = 0;
+				else idL = max_act_idx - 1;
+				if(max_act_idx == learning_runtime->sim->n->pops[post_pop].size) idH = learning_runtime->sim->n->pops[post_pop].size;
+				else idH = max_act_idx + 1;
+				limL = learning_runtime->sim->n->pops[post_pop].Winput[idL];
+				limH = learning_runtime->sim->n->pops[post_pop].Winput[idH];
+				tol= 1.0e-6; // tol = (1e-6)*fabs(limL + limH)/2.0;		
+		   		learning_runtime->in->data[didx][post_pop] = decode_population(learning_runtime->sim->n, limL, limH, tol,  pre_pop, post_pop);
+		       break;	
 		      }
 	    
 	 }/* end for each sample in the dataset */
