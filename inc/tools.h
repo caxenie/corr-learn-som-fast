@@ -26,7 +26,8 @@ enum{
 	ORDER3,
 	SINE,
 	SQUARE,
-	COMPLEX
+	COMPLEX,
+	INTRINSICS
 };
 
 /* dataset type */

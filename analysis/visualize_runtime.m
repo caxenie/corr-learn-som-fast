@@ -52,7 +52,7 @@ for ppidx = 1:rdata.sim.indata.npop
     plot(rdata.sim.indata.data(:, ppidx), sprintf('%s',idcolor(ppidx))); xlabel('samples');
     grid off; box off; title(sprintf('Input data - pop %d', ppidx));
     subplot(4, 1, 2);
-    hist(rdata.sim.indata.data(:, ppidx), 50);
+    histogram(rdata.sim.indata.data(:, ppidx), 50, 'FaceColor',sprintf('%s',idcolor(ppidx)));
     grid off; box off; title(sprintf('Input data distribution - pop %d', ppidx));
     hndl = subplot(4, 1, 3);
     % compute the tuning curve of the current neuron in the population
@@ -76,7 +76,7 @@ for ppidx = 1:rdata.sim.indata.npop
     % with the increase of the distribution of sensory data (directly proportional with the prior, p(s))
     % stimuli associated with the peaks of the tuning curves
     subplot(4, 1, 4);
-    hist(rdata.sim.net.pops(ppidx).Winput, 50); box off;title('# of allocated neurons for a value');
+    histogram(rdata.sim.net.pops(ppidx).Winput, 50, 'FaceColor',sprintf('%s',idcolor(ppidx))); box off;title('# of allocated neurons for a value');
     xlabel('input value range');
 end
 
@@ -116,5 +116,4 @@ set(ax3, 'XTickLabel', pref);
 set(ax3, 'XLim', [min(x), max(x)]);
 xlabel(ax3, 'neuron index');
 end
-
 end

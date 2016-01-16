@@ -1,66 +1,4 @@
 function varargout = viserrorbar(varargin)
-%BOUNDEDLINE Plot a line with shaded error/confidence bounds
-%
-% [hl, hp] = boundedline(x, y, b)
-% [hl, hp] = boundedline(x, y, b, linespec)
-% [hl, hp] = boundedline(x1, y1, b1, linespec1,  x2, y2, b2, linespec2)
-% [hl, hp] = boundedline(..., 'alpha')
-% [hl, hp] = boundedline(..., ax)
-% [hl, hp] = boundedline(..., 'transparency', trans)
-% [hl, hp] = boundedline(..., 'orientation', orient)
-% [hl, hp] = boundedline(..., 'cmap', cmap)
-%
-% Input variables:
-%
-%   x, y:       x and y values, either vectors of the same length, matrices
-%               of the same size, or vector/matrix pair where the row or
-%               column size of the array matches the length of the vector
-%               (same requirements as for plot function).
-%
-%   b:          npoint x nside x nline array.  Distance from line to
-%               boundary, for each point along the line (dimension 1), for
-%               each side of the line (lower/upper or left/right, depending
-%               on orientation) (dimension 2), and for each plotted line
-%               described by the preceding x-y values (dimension 3).  If
-%               size(b,1) == 1, the bounds will be the same for all points
-%               along the line.  If size(b,2) == 1, the bounds will be
-%               symmetrical on both sides of the lines.  If size(b,3) == 1,
-%               the same bounds will be applied to all lines described by
-%               the preceding x-y arrays (only applicable when either x or
-%               y is an array).  Bounds cannot include Inf, -Inf, or NaN,
-%
-%   linespec:   line specification that determines line type, marker
-%               symbol, and color of the plotted lines for the preceding
-%               x-y values.
-%
-%   'alpha':    if included, the bounded area will be rendered with a
-%               partially-transparent patch the same color as the
-%               corresponding line(s).  If not included, the bounded area
-%               will be an opaque patch with a lighter shade of the
-%               corresponding line color.
-%
-%   ax:         handle of axis where lines will be plotted.  If not
-%               included, the current axis will be used.
-%
-%   transp:     Scalar between 0 and 1 indicating with the transparency or
-%               intensity of color of the bounded area patch. Default is
-%               0.2.
-%
-%   orient:     'vert': add bounds in vertical (y) direction (default)
-%               'horiz': add bounds in horizontal (x) direction 
-%
-%   cmap:       n x 3 colormap array.  If included, lines will be colored
-%               (in order of plotting) according to this colormap,
-%               overriding any linespec or default colors. 
-%
-% Output variables:
-%
-%   hl:         handles to line objects
-%
-%   hp:         handles to patch objects
-%
-% Example:
-%
 % x = linspace(0, 2*pi, 50);
 % y1 = sin(x);
 % y2 = cos(x);
@@ -71,22 +9,6 @@ function varargout = viserrorbar(varargin)
 % [l,p] = boundedline(x, y1, e1, '-b*', x, y2, e2, '--ro');
 % outlinebounds(l,p);
 % title('Opaque bounds, with outline');
-% 
-% ax(2) = subplot(2,2,2);
-% boundedline(x, [y1;y2], rand(length(y1),2,2)*.5+.5, 'alpha');
-% title('Transparent bounds');
-% 
-% ax(3) = subplot(2,2,3);
-% boundedline([y1;y2], x, e1(1), 'orientation', 'horiz')
-% title('Horizontal bounds');
-% 
-% ax(4) = subplot(2,2,4);
-% boundedline(x, repmat(y1, 4,1), permute(0.5:-0.1:0.2, [3 1 2]), ...
-%             'cmap', cool(4), 'transparency', 0.5);
-% title('Multiple bounds using colormap');
-
-
-% Copyright 2010 Kelly Kearney
 
 %--------------------
 % Parse input

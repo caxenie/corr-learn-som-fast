@@ -55,6 +55,11 @@ indata* generate_input_data(int np, int psz, int l, int rtype, int dtype)
 								rel_vars[i][1] = sum_base;
 							}
 						break;
+						case INTRINSICS: /* test on intrinsic / non-explicit learning */
+							 for(int i = 0;i<id->len;i++){
+								rel_vars[i][1] = atan((base_var[i]));
+			 				}		
+						break;
 					}	
 				}		
 			}
@@ -66,16 +71,17 @@ indata* generate_input_data(int np, int psz, int l, int rtype, int dtype)
 				rel_vars[i][1] = RANGE*pow(base_var[i], 1);
 				rel_vars[i][2] = pow(base_var[i], 2); 
 			}
-		     }
+	             }
 		break;
 		case 4:
 		    switch(rtype){
 			case COMPLEX:
-			for(int i = 0;i<id->len;i++){
+			 for(int i = 0;i<id->len;i++){
 				rel_vars[i][1] = RANGE*pow(base_var[i], 1);
 				rel_vars[i][2] = pow(base_var[i], 3);
 				rel_vars[i][3] = pow(base_var[i], 2);
-			}
+			 }
+			break;
 		    }	
 		break;
 		case 5:

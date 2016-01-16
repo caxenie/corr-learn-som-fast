@@ -215,7 +215,6 @@ outdata* test_inference(outdata* learning_runtime)
 {
 	double insample = 0.0f;
 	int pre_pop = 0;
-	int post_pop = 1;
 	double tot_act = 0.0f;
 	double *cur_act = (double*)calloc(learning_runtime->sim->n->pops[pre_pop].size, sizeof(double));
 	double **avg_act = (double**)calloc(learning_runtime->sim->n->nsize, sizeof(double*));
@@ -234,8 +233,10 @@ outdata* test_inference(outdata* learning_runtime)
 	double limL = 0.0f, limH = 0.0f;
 	int idL = 0, idH = 0;
 	double tol = 0.0f;
-
-        for(int didx = 0; didx < learning_runtime->in->len; didx++){
+	
+	/* go through all post synaptic populations in the net */
+	for(int post_pop=1; post_pop<learning_runtime->sim->n->nsize; post_pop++){
+          for(int didx = 0; didx < learning_runtime->in->len; didx++){
    	    /* use the learned sensory elicited synaptic weights and compute activation for first population */
 	    /* infer from first population the value in the second */
         	      learning_runtime->sim->n->pops[pre_pop].a = (double*)calloc(learning_runtime->sim->n->pops[pre_pop].size, sizeof(double));
@@ -304,13 +305,14 @@ outdata* test_inference(outdata* learning_runtime)
 				else idH = max_act_idx + 1;
 				limL = learning_runtime->sim->n->pops[post_pop].Winput[idL];
 				limH = learning_runtime->sim->n->pops[post_pop].Winput[idH];
-				tol= 1.0e-6; // tol = (1e-6)*fabs(limL + limH)/2.0;		
+				tol= 1.0e-6; // tol = (1e-6)*fabs(limL + limH)/2.0;
 		   		learning_runtime->in->data[didx][post_pop] = decode_population(learning_runtime->sim->n, limL, limH, tol,  pre_pop, post_pop);
+
 		       break;	
 		      }
 	    
 	 }/* end for each sample in the dataset */
-
+       } /* end loop through all post synaptic populations */
 	 /* fill in the return struct */
         test_data->in = learning_runtime->in;
         test_data->sim = learning_runtime->sim;

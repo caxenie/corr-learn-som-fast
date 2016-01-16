@@ -6,7 +6,7 @@
 #define MAX_EPOCHS      400
 #define N_POP           2
 #define POP_SIZE        100
-#define DATASET_LEN     500
+#define DATASET_LEN     600
 #define ALPHAI 		0.1f
 #define ALPHAF 		0.001f
 #define SIGMAF 		1.0f
@@ -20,7 +20,7 @@
 /* optimizer utils */
 #define SIGN(a,b)       ((b) >= 0.0 ? fabs(a) : -fabs(a))
 #define ITMAX           50
-#define EPS             1.1e-8
+#define EPS             1.1e-16
 
 /* adaptive processes parametrization types */
 enum{
